@@ -1,0 +1,27 @@
+name: juicy_fruit
+version: 0.1.0
+
+authors:
+  - Giorgi Kavrelishvili <giorgi.kavrelishvili@pm.me>
+
+targets:
+  juicy_fruit:
+    main: src/juicy_fruit.cr
+
+dependencies:
+  grip:
+    github: grip-framework/grip
+
+  jelly:
+    github: grkek/jelly
+
+  spectator:
+    github: grip-framework/spectator
+
+development_dependencies:
+  ameba:
+    github: crystal-ameba/ameba
+
+crystal: ">= 0.36.0"
+
+license: MIT

@@ -1,0 +1,2645 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Konjac - An interactive compiler/debugger for the language and the virtual machine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=JetBrains+Mono:wght@400;500;700&display=swap"
+        rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-tertiary: #18181b;
+            --bg-elevated: #1f1f23;
+            --border-color: #2a2a2e;
+            --border-active: #3f3f46;
+            --text-primary: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent-green: #22c55e;
+            --accent-green-dim: #16a34a;
+            --accent-red: #ef4444;
+            --accent-red-dim: #dc2626;
+            --accent-amber: #f59e0b;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-purple: #a855f7;
+            --accent-pink: #ec4899;
+            --font-mono: 'JetBrains Mono', 'IBM Plex Mono', monospace;
+            --glow-green: 0 0 20px rgba(34, 197, 94, 0.3);
+            --glow-red: 0 0 20px rgba(239, 68, 68, 0.3);
+            --accent-compile: #8b5cf6;
+            --accent-compile-dim: #7c3aed;
+            --panel-header-height: 32px;
+            --toolbar-height: 48px;
+            --statusbar-height: 24px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: var(--font-mono);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 255, 255, 0.01) 2px, rgba(255, 255, 255, 0.01) 4px);
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .top-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            height: var(--toolbar-height);
+            padding: 0 1rem;
+            flex-shrink: 0;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            font-weight: 600;
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #8B5CF6, #7C3AED);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 25px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            color: var(--text-secondary);
+        }
+
+        .toolbar-buttons {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+
+        .toolbar-btn {
+            padding: 0.375rem 0.75rem;
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            color: var(--text-primary);
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.375rem;
+            transition: all 0.15s ease;
+        }
+
+        .toolbar-btn:hover {
+            background: var(--bg-secondary);
+            border-color: var(--border-active);
+        }
+
+        .toolbar-btn.primary {
+            background: var(--accent-green-dim);
+            border-color: var(--accent-green);
+            color: white;
+        }
+
+        .toolbar-btn.primary:hover {
+            background: var(--accent-green);
+        }
+
+        .toolbar-btn.compile {
+            background: var(--accent-compile-dim);
+            border-color: var(--accent-compile);
+            color: white;
+        }
+
+        .toolbar-btn.compile:hover {
+            background: var(--accent-compile);
+        }
+
+        .toolbar-btn.connect {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+        }
+
+        .toolbar-btn.connect:hover {
+            filter: brightness(110%);
+        }
+
+        .toolbar-btn.decompile {
+            background: var(--accent-amber);
+            border-color: var(--accent-amber);
+            color: white;
+        }
+
+        .toolbar-btn.decompile:hover {
+            filter: brightness(110%);
+        }
+
+        .main-workspace {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .sidebar {
+            width: 280px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .sidebar-header {
+            padding: 0.75rem 1rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+        }
+
+        .examples-browser {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
+
+        .examples-tree {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem 0;
+        }
+
+        .folder {
+            user-select: none;
+        }
+
+        .folder-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+
+        .folder-header:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .folder-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s ease;
+        }
+
+        .folder-icon svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .folder.open>.folder-header .folder-icon:first-child {
+            transform: rotate(90deg);
+        }
+
+        .folder-icon.folder-type svg {
+            color: var(--accent-amber);
+        }
+
+        .folder-name {
+            flex: 1;
+        }
+
+        .folder-count {
+            font-size: 0.625rem;
+            color: var(--text-muted);
+            background: var(--bg-elevated);
+            padding: 0.125rem 0.375rem;
+            border-radius: 3px;
+        }
+
+        .folder-contents {
+            display: none;
+            padding-left: 0.75rem;
+        }
+
+        .folder.open>.folder-contents {
+            display: block;
+        }
+
+        .file-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem 0.5rem 1.5rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            border-left: 2px solid transparent;
+        }
+
+        .file-item:hover {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+        }
+
+        .file-item.active {
+            background: var(--bg-tertiary);
+            color: var(--accent-cyan);
+            border-left-color: var(--accent-cyan);
+        }
+
+        .file-icon {
+            width: 16px;
+            height: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .file-icon svg {
+            width: 14px;
+            height: 14px;
+        }
+
+        .file-icon.basic svg {
+            color: var(--accent-green);
+        }
+
+        .file-icon.control svg {
+            color: var(--accent-purple);
+        }
+
+        .file-icon.io svg {
+            color: var(--accent-blue);
+        }
+
+        .file-name {
+            flex: 1;
+        }
+
+        .file-badge {
+            font-size: 0.5625rem;
+            padding: 0.125rem 0.375rem;
+            border-radius: 3px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .file-badge.new {
+            background: var(--accent-green-dim);
+            color: var(--accent-green);
+        }
+
+        .file-badge.demo {
+            background: rgba(168, 85, 247, 0.2);
+            color: var(--accent-purple);
+        }
+
+        .central-split {
+            flex: 1;
+            display: flex;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .split-container {
+            display: flex;
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .split-pane {
+            flex: 1;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .split-divider {
+            width: 8px;
+            background: var(--border-color);
+            cursor: col-resize;
+            position: relative;
+            transition: background 0.2s;
+        }
+
+        .split-divider:hover {
+            background: var(--accent-cyan);
+        }
+
+        .split-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 2px;
+            height: 20px;
+            background: var(--text-muted);
+            border-radius: 1px;
+        }
+
+        .editor-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .editor-header {
+            padding: 0.75rem 1rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .editor-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bytecode-container {
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .bytecode-header {
+            padding: 0.75rem 1rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .bytecode-content {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .state-sidebar {
+            width: 320px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .state-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .state-section {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .state-section-header {
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .state-badge {
+            font-size: 0.625rem;
+            padding: 0.125rem 0.375rem;
+            border-radius: 3px;
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+        }
+
+        .process-info {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .process-stat {
+            background: var(--bg-tertiary);
+            padding: 0.625rem 0.75rem;
+            border-radius: 4px;
+        }
+
+        .process-stat-label {
+            font-size: 0.625rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.25rem;
+        }
+
+        .process-stat-value {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .current-instruction {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            padding: 0.75rem;
+        }
+
+        .current-instruction-label {
+            font-size: 0.625rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.375rem;
+        }
+
+        .current-instruction-code {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--accent-amber);
+        }
+
+        .state-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.25rem;
+        }
+
+        .state-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.625rem;
+            padding: 0.375rem 0.5rem;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            font-size: 0.75rem;
+        }
+
+        .state-index {
+            color: var(--text-muted);
+            min-width: 1.5rem;
+            text-align: right;
+        }
+
+        .state-value {
+            color: var(--accent-cyan);
+            word-break: break-all;
+        }
+
+        .state-value.string {
+            color: var(--accent-green);
+        }
+
+        .state-value.number {
+            color: var(--accent-amber);
+        }
+
+        .state-value.symbol {
+            color: var(--accent-purple);
+        }
+
+        .empty-state {
+            padding: 1.5rem 1rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-style: italic;
+        }
+
+        .bottom-panel {
+            height: 300px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+        .panel-header {
+            padding: 0.5rem 1rem;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            user-select: none;
+        }
+
+        .panel-tabs {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .panel-tab {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.6875rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.15s ease;
+        }
+
+        .panel-tab:hover {
+            color: var(--text-secondary);
+        }
+
+        .panel-tab.active {
+            color: var(--text-primary);
+            background: var(--bg-tertiary);
+        }
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .panel-section {
+            flex: 1;
+            padding: 0.75rem 1rem;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .panel-section.active {
+            display: block;
+        }
+
+        .output-line {
+            display: flex;
+            gap: 0.75rem;
+            padding: 0.125rem 0;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+        }
+
+        .output-time {
+            color: var(--text-muted);
+            flex-shrink: 0;
+        }
+
+        .output-prefix {
+            flex-shrink: 0;
+            font-weight: 600;
+        }
+
+        .output-prefix.stdout {
+            color: var(--accent-cyan);
+        }
+
+        .output-prefix.error {
+            color: var(--accent-red);
+        }
+
+        .output-prefix.compile {
+            color: var(--accent-compile);
+        }
+
+        .output-prefix.socket {
+            color: var(--accent-amber);
+        }
+
+        .output-prefix.breakpoint {
+            color: var(--accent-red);
+        }
+
+        .output-message {
+            word-break: break-word;
+            flex: 1;
+        }
+
+        .breakpoints-panel {
+            padding: 0.75rem 1rem;
+        }
+
+        .breakpoints-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.375rem;
+            margin-bottom: 1rem;
+        }
+
+        .breakpoint-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.625rem;
+            background: var(--bg-tertiary);
+            border-radius: 3px;
+            border-left: 2px solid var(--accent-red);
+        }
+
+        .breakpoint-item.pending {
+            border-left-color: var(--accent-amber);
+            opacity: 0.7;
+        }
+
+        .breakpoint-item.confirmed {
+            border-left-color: var(--accent-green);
+        }
+
+        .breakpoint-info {
+            font-size: 0.75rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.125rem;
+        }
+
+        .breakpoint-type {
+            color: var(--text-muted);
+        }
+
+        .breakpoint-id {
+            font-size: 0.625rem;
+            color: var(--text-muted);
+        }
+
+        .breakpoint-remove {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            padding: 0.25rem;
+            font-size: 0.875rem;
+            line-height: 1;
+            transition: color 0.15s ease;
+        }
+
+        .breakpoint-remove:hover {
+            color: var(--accent-red);
+        }
+
+        .add-breakpoint-form {
+            background: var(--bg-tertiary);
+            padding: 0.75rem;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .control-label {
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            margin-top: 5px;
+            color: var(--text-muted);
+        }
+
+        .control-hint {
+            font-size: 0.625rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .add-breakpoint-form .btn-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .input {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.15s ease;
+        }
+
+        .input:focus {
+            border-color: var(--accent-cyan);
+        }
+
+        .input::placeholder {
+            color: var(--text-muted);
+        }
+
+        select.input {
+            cursor: pointer;
+        }
+
+        .btn {
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            font-weight: 500;
+            padding: 0.625rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.15s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-shrink: 0;
+        }
+
+        .btn:hover:not(:disabled) {
+            background: var(--bg-secondary);
+            border-color: var(--border-active);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .btn-primary {
+            margin-top: 5px;
+            background: var(--accent-green-dim);
+            border-color: var(--accent-green);
+            color: #fff;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--accent-green);
+            filter: brightness(110%);
+        }
+
+        .status-bar {
+            height: var(--statusbar-height);
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 1rem;
+            font-size: 0.6875rem;
+            flex-shrink: 0;
+        }
+
+        .status-left,
+        .status-right {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border-color);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--border-active);
+        }
+
+        @media (max-width: 1200px) {
+            .sidebar {
+                width: 240px;
+            }
+
+            .state-sidebar {
+                width: 280px;
+            }
+        }
+
+        @media (max-width: 1000px) {
+            .sidebar {
+                width: 200px;
+            }
+
+            .state-sidebar {
+                width: 240px;
+            }
+        }
+
+        @media (max-width: 800px) {
+            .toolbar-btn span {
+                display: none;
+            }
+
+            .toolbar-btn {
+                padding: 0.375rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="app-container">
+        <div class="top-nav">
+            <div class="logo">
+                <div class="logo-icon">♅</div>
+                <span class="logo-text">Konjac</span>
+            </div>
+            <div class="toolbar-buttons">
+                <button class="toolbar-btn compile" title="Compile (Ctrl+B)"
+                    id="btnCompile"><span>⚡</span><span>Compile</span></button>
+                <button class="toolbar-btn decompile" title="Decompile (Ctrl+D)"
+                    id="btnDecompile"><span>↩</span><span>Decompile</span></button>
+                <button class="toolbar-btn primary" title="Run (F5)" id="btnRun"><span>▶</span><span>Run</span></button>
+                <button class="toolbar-btn" title="Step (F10)" id="btnStep"><span>→</span><span>Step</span></button>
+                <button class="toolbar-btn" title="Continue (F8)"
+                    id="btnContinue"><span>▶▶</span><span>Continue</span></button>
+                <button class="toolbar-btn connect" title="Connect"
+                    id="btnConnect"><span>↻</span><span>Connect</span></button>
+            </div>
+        </div>
+        <div class="main-workspace">
+            <div class="sidebar">
+                <div class="sidebar-header">Browser</div>
+                <div class="examples-browser">
+                    <div class="examples-tree" id="examplesTree"></div>
+                </div>
+                <div class="sidebar-header">Breakpoint Manager</div>
+                <div class="breakpoint-content" id="breakpointContent">
+                    <div class="breakpoints-panel">
+                        <div class="state-section">
+                            <div class="state-section-header">Add Breakpoint</div>
+                            <div class="add-breakpoint-form">
+                                <div class="control-group">
+                                    <div class="control-label">Condition Type</div>
+                                    <select class="input" id="bpType">
+                                        <option value="counter">Instruction Counter</option>
+                                        <option value="minStackDepth">Min Call Stack Depth</option>
+                                        <option value="maxStackDepth">Max Call Stack Depth</option>
+                                        <option value="stackSize">Exact Stack Size</option>
+                                    </select>
+                                    <div class="control-hint" id="bpHint">Break when instruction counter equals value
+                                    </div>
+                                </div>
+                                <div class="control-group">
+                                    <div class="control-label">Value</div>
+                                    <input type="number" class="input" id="bpValue" placeholder="Enter value..."
+                                        value="0" min="0">
+                                </div>
+                                <div class="btn-row">
+                                    <button class="btn btn-primary" id="btnAddBp">+ Add Breakpoint</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="central-split">
+                <div class="split-container">
+                    <div class="split-pane">
+                        <div class="editor-container">
+                            <div class="editor-header"><span>Konjac Source</span></div>
+                            <div class="editor-content">
+                                <div id="konjacEditor" style="width: 100%; height: 100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="split-divider" id="verticalDivider"></div>
+                    <div class="split-pane">
+                        <div class="bytecode-container">
+                            <div class="bytecode-header"><span>Compiled Bytecode</span></div>
+                            <div class="bytecode-content">
+                                <div id="bytecodeViewer" style="width: 100%; height: 100%;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="state-sidebar">
+                    <div class="sidebar-header">Process Information</div>
+                    <div class="state-content" id="stateContent">
+                        <div class="state-section">
+                            <div class="state-section-header">Process</div>
+                            <div class="process-info">
+                                <div class="process-stat">
+                                    <div class="process-stat-label">Counter</div>
+                                    <div class="process-stat-value" id="statCounter">—</div>
+                                </div>
+                                <div class="process-stat">
+                                    <div class="process-stat-label">Call Depth</div>
+                                    <div class="process-stat-value" id="statCallDepth">—</div>
+                                </div>
+                            </div>
+                            <div class="current-instruction" id="currentInstruction" style="display: none;">
+                                <div class="current-instruction-label">Current Instruction</div>
+                                <div class="current-instruction-code" id="instructionCode">—</div>
+                            </div>
+                        </div>
+                        <div class="state-section">
+                            <div class="state-section-header">Stack <span class="state-badge" id="stackCount">0</span>
+                            </div>
+                            <div class="state-list" id="stackList">
+                                <div class="empty-state">No data</div>
+                            </div>
+                        </div>
+                        <div class="state-section">
+                            <div class="state-section-header">Locals <span class="state-badge" id="localsCount">0</span>
+                            </div>
+                            <div class="state-list" id="localsList">
+                                <div class="empty-state">No data</div>
+                            </div>
+                        </div>
+                        <div class="state-section">
+                            <div class="state-section-header">Active Breakpoints <span class="state-badge"
+                                    id="bpCount">0</span></div>
+                            <div class="breakpoints-list" id="breakpointsList">
+                                <div class="empty-state">No breakpoints set</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="bottom-panel">
+            <div class="panel-header">
+                <div class="panel-tabs">
+                    <div class="panel-tab active" data-tab="output">OUTPUT</div>
+                </div>
+            </div>
+            <div class="panel-content">
+                <div class="panel-section active" id="outputTab"></div>
+            </div>
+        </div>
+        <div class="status-bar">
+            <div class="status-left"><span id="currentFile">Untitled.kj</span></div>
+            <div class="status-right"><span id="lineInfo">Line 1, Column 1</span><span
+                    id="connectionInfo">Disconnected</span>
+            </div>
+        </div>
+    </div>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
+    <script>
+        const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${location.host}/socket/debugger`;
+        const config = {
+            websocketUrl: wsUrl,
+            autoconnect: false
+        };
+        const state = {
+            isConnected: false,
+            isInitialized: false,
+            isRunning: false,
+            isPaused: false,
+            breakpoints: new Map()
+        };
+        let konjacEditor = null,
+            bytecodeViewer = null;
+        const elements = {};
+        const ICONS = {
+            chevron: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg>`,
+            folder: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>`,
+            file: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>`
+        };
+        const KONJAC_EXAMPLES = {
+            basics: {
+                name: "Basics",
+                icon: "basic",
+                files: {
+                    hello_world: {
+                        name: "helloWorld.kj",
+                        badge: null,
+                        code: `-- Hello World in Konjac\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    IO.puts("Hello, Konjac!")\n  end\nend\n`
+                    },
+                    variables: {
+                        name: "variables.kj",
+                        badge: null,
+                        code: `-- Variables example\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    name = "Alice"\n    age = 30\n    IO.puts(name)\n    IO.puts(age)\n  end\nend\n`
+                    },
+                    arithmetic: {
+                        name: "arithmetic.kj",
+                        badge: null,
+                        code: `-- Arithmetic operations\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    a = 10\n    b = 5\n    sum = a + b\n    IO.puts(sum)\n  end\nend\n`
+                    },
+                    types: {
+                        name: "typeSystem.kj",
+                        badge: null,
+                        code: `-- Type annotations and inference\nmodule Untitled.Application\n  -- Explicit type annotations\n  function add(x : Int32, y : Int32) : Int32\n    x + y\n  end\n\n  -- Type inference\n  function multiply(x, y)\n    x * y  -- Inferred as Int32 * Int32 -> Int32\n  end\n\n  function main(arguments : Array(String)) : Nil\n    result1 = add(5, 3)  -- 8\n    result2 = multiply(4, 2)  -- 8\n    IO.puts(\`Results: \${result1}, \${result2}\`)\n  end\nend\n`
+                    }
+                }
+            },
+            control_flow: {
+                name: "Control Flow",
+                icon: "control",
+                files: {
+                    if_statement: {
+                        name: "ifStatement.kj",
+                        badge: null,
+                        code: `-- If statement\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    x = 25\n\n    if x > 20 do\n      IO.puts("Greater than 20")\n    else\n      IO.puts("20 or less")\n    end\n  end\nend\n`
+                    },
+                    cond_statement: {
+                        name: "conditionalExpression.kj",
+                        badge: "new",
+                        code: `-- Cond statement for multiple conditions\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    score = 85\n    grade = cond do\n      score >= 90 -> "A"\n      score >= 80 -> "B"\n      score >= 70 -> "C"\n      score >= 60 -> "D"\n      true -> "F"\n    end\n    IO.puts(\`Grade: \${grade}\`)\n  end\nend\n`
+                    },
+                    while_loop: {
+                        name: "whileLoop.kj",
+                        badge: null,
+                        code: `-- While loop with accumulator\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    count = 0\n    total = 0\n\n    while count < 5 do\n      total = total + count\n      count = count + 1\n    end\n\n    IO.puts(\`Total: \${total}\`)\n  end\nend\n`
+                    },
+                    for_comprehension: {
+                        name: "forComprehension.kj",
+                        badge: null,
+                        code: `-- For comprehension with generator\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    -- Generator syntax\n    squares = for x in 1..5 do\n      x * x\n    end\n    IO.puts(squares)  -- [1, 4, 9, 16, 25]\n\n    -- With filter\n    even_squares = for x in 1..10, x % 2 == 0 do\n      x * x\n    end\n    IO.puts(even_squares)  -- [4, 16, 36, 64, 100]\n  end\nend\n`
+                    }
+                }
+            },
+            pattern_matching: {
+                name: "Pattern Matching",
+                icon: "pattern",
+                files: {
+                    string_patterns: {
+                        name: "stringPatterns.kj",
+                        badge: null,
+                        code: `-- Pattern matching with Strings\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    string = "HTTP/1.1"\n    <<"HTTP/", version/3>> = string\n    IO.puts(\`HTTP version: \${version}\`)\n  end\nend\n`
+                    },
+                    tuple_patterns: {
+                        name: "tuplePatterns.kj",
+                        badge: null,
+                        code: `-- Pattern matching with Tuples\nmodule Untitled.Application\n  function get_status() : {Int32, String}\n    {200, "OK"}\n  end\n\n  function main(arguments : Array(String)) : Nil\n    {code, message} = get_status()\n    IO.puts(\`Status: \${code} \${message}\`)\n  end\nend\n`
+                    },
+                    struct_patterns: {
+                        name: "structPatterns.kj",
+                        badge: null,
+                        code: `-- Pattern matching with Structs\nmodule Untitled.Application\n  struct Point\n    x : Int32\n    y : Int32\n  end\n\n  function main(arguments : Array(String)) : Nil\n    point = Point{x: 10, y: 20}\n    Point{x: x_coord, y: y_coord} = point\n    IO.puts(\`Coordinates: (\${x_coord}, \${y_coord})\`)\n  end\nend\n`
+                    },
+                    guard_clauses: {
+                        name: "patternGuards.kj",
+                        badge: "advanced",
+                        code: `-- Pattern matching with guard clauses\nmodule Untitled.Application\n  function categorize(value) : String\n    case value do\n      x when is_number(x) and x > 0 -> "positive number"\n      x when is_number(x) and x < 0 -> "negative number"\n      x when is_string(x) -> "string: " + x\n      _ -> "unknown"\n    end\n  end\n\n  function main(arguments : Array(String)) : Nil\n    IO.puts(categorize(42))    -- "positive number"\n    IO.puts(categorize(-5))    -- "negative number"\n    IO.puts(categorize("hello")) -- "string: hello"\n  end\nend\n`
+                    }
+                }
+            },
+            functions: {
+                name: "Functions",
+                icon: "function",
+                files: {
+                    named_functions: {
+                        name: "namedFunctions.kj",
+                        badge: null,
+                        code: `-- Function definitions and calls\nmodule Untitled.Application\n  -- Public function (exported)\n  export function greet(name : String) : String\n    "Hello, " + name + "!"\n  end\n\n  -- Private function\n  function private_helper(x : Int32) : Int32\n    x * 2\n  end\n\n  -- Function with default arguments\n  function power(base : Int32, exponent : Int32 = 2) : Int32\n    base ** exponent\n  end\n\n  function main(arguments : Array(String)) : Nil\n    IO.puts(greet("World"))\n    IO.puts(power(3))      -- 9 (uses default exponent)\n    IO.puts(power(3, 3))   -- 27\n  end\nend\n`
+                    },
+                    anonymous_functions: {
+                        name: "anonymousFunctions.kj",
+                        badge: null,
+                        code: `-- Lambda functions and higher-order functions\nmodule Untitled.Application\n  function apply_twice(f : Function(Int32 -> Int32), x : Int32) : Int32\n    f(f(x))\n  end\n\n  function main(arguments : Array(String)) : Nil\n    -- Lambda syntax variations\n    square = fn(x : Int32) -> x * x end\n    cube = function(x : Int32) do\n      x * x * x\n    end\n\n    -- Partial application\n    add = function(x : Int32, y : Int32) do\n      x + y\n    end\n    add_five = fn(y) -> add(5, y) end\n\n    IO.puts(square(4))      -- 16\n    IO.puts(apply_twice(square, 2))  -- 16\n    IO.puts(add_five(10))   -- 15\n  end\nend\n`
+                    },
+                    recursion: {
+                        name: "recursion.kj",
+                        badge: null,
+                        code: `-- Recursive functions with tail-call optimization\nmodule Untitled.Application\n  -- Regular recursion\n  function factorial(n : Int32) : Int32\n    if n <= 1 do\n      1\n    else\n      n * factorial(n - 1)\n    end\n  end\n\n  -- Tail-recursive version\n  function factorial_tail(n : Int32, acc : Int32 = 1) : Int32\n    if n <= 1 do\n      acc\n    else\n      factorial_tail(n - 1, acc * n)\n    end\n  end\n\n  -- Mutual recursion\n  function is_even(n : Int32) : Bool\n    if n == 0 do\n      true\n    else\n      is_odd(n - 1)\n    end\n  end\n\n  function is_odd(n : Int32) : Bool\n    if n == 0 do\n      false\n    else\n      is_even(n - 1)\n    end\n  end\n\n  function main(arguments : Array(String)) : Nil\n    IO.puts(factorial(5))      -- 120\n    IO.puts(factorial_tail(5)) -- 120\n    IO.puts(is_even(4))        -- true\n    IO.puts(is_odd(4))         -- false\n  end\nend\n`
+                    },
+                    pipelines: {
+                        name: "pipelineOperator.kj",
+                        badge: "favorite",
+                        code: `-- Pipe operator for function composition\nmodule Untitled.Application\n  function double(x : Int32) : Int32, do: x * 2\n  function add_one(x : Int32) : Int32, do: x + 1\n  function square(x : Int32) : Int32, do: x * x\n\n  function main(arguments : Array(String)) : Nil\n    -- Traditional nested calls\n    result1 = square(add_one(double(3)))  -- ((3*2)+1)^2 = 49\n\n    -- Pipeline version (left to right)\n    result2 = 3\n      |> double\n      |> add_one\n      |> square\n\n    -- Pipeline with anonymous functions\n    result3 = [1, 2, 3, 4, 5]\n      |> List.map(fn(x) -> x * 2 end)\n      |> List.filter(fn(x) -> x > 5 end)\n      |> List.reduce(fn(acc, x) -> acc + x end, 0)\n\n    IO.puts(\`Results: \${result1}, \${result2}, \${result3}\`)\n  end\nend\n`
+                    }
+                }
+            },
+            data_structures: {
+                name: "Data Structures",
+                icon: "data",
+                files: {
+                    lists: {
+                        name: "lists.kj",
+                        badge: null,
+                        code: `-- List operations and comprehensions\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    -- List creation\n    numbers = [1, 2, 3, 4, 5]\n    evens = [2, 4, 6, 8, 10]\n\n    -- List operations\n    combined = numbers ++ evens  -- Concatenation\n    doubled = List.map(numbers, fn(x) -> x * 2 end)\n    sum = List.reduce(numbers, fn(acc, x) -> acc + x end, 0)\n\n    -- List pattern matching\n    [first, second | rest] = numbers\n    IO.puts(\`First: \${first}, Second: \${second}\`)\n    IO.puts(\`Rest: \${rest}\`)\n\n    -- List comprehensions\n    squares = for x in numbers do\n      x * x\n    end\n  end\nend\n`
+                    },
+                    maps: {
+                        name: "mapsAndDictionaries.kj",
+                        badge: null,
+                        code: `-- Map operations and pattern matching\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    -- Map creation\n    person = %{\n      name: "Alice",\n      age: 30,\n      city: "New York"\n    }\n\n    -- Access and update\n    name = person[:name]\n    updated = Map.put(person, :age, 31)\n\n    -- Map pattern matching\n    %{name: person_name, age: person_age} = person\n    IO.puts(\`\${person_name} is \${person_age} years old\`)\n\n    -- Nested maps\n    company = %{\n      name: "Tech Corp",\n      employees: %{\n        count: 100,\n        departments: ["Engineering", "Sales"]\n      }\n    }\n  end\nend\n`
+                    },
+                    tuples: {
+                        name: "tuples.kj",
+                        badge: null,
+                        code: `-- Fixed-size tuple operations\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    -- Tuple creation\n    point = {10, 20}\n    person = {"Alice", 30, "Engineer"}\n\n    -- Access elements (0-indexed)\n    x = elem(point, 0)  -- 10\n    y = elem(point, 1)  -- 20\n\n    -- Update tuple (creates new tuple)\n    new_point = put_elem(point, 1, 30)  -- {10, 30}\n\n    -- Pattern matching with tuples\n    {name, age, _} = person\n    IO.puts(\`\${name} is \${age} years old\`)\n\n    -- Return multiple values\n    function min_max(list) : {Int32, Int32}\n      min = List.min(list)\n      max = List.max(list)\n      {min, max}\n    end\n  end\nend\n`
+                    },
+                    sets: {
+                        name: "sets.kj",
+                        badge: null,
+                        code: `-- Set operations\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    -- Set creation\n    set1 = Set.new([1, 2, 3, 4, 5])\n    set2 = Set.new([4, 5, 6, 7, 8])\n\n    -- Set operations\n    union = Set.union(set1, set2)\n    intersection = Set.intersection(set1, set2)\n    difference = Set.difference(set1, set2)\n\n    -- Membership test\n    has_three = Set.member?(set1, 3)  -- true\n    has_nine = Set.member?(set1, 9)   -- false\n\n    IO.puts(\`Union: \${Set.to_list(union)}\`)\n    IO.puts(\`Intersection: \${Set.to_list(intersection)}\`)\n  end\nend\n`
+                    }
+                }
+            },
+            types: {
+                name: "Type System",
+                icon: "type",
+                files: {
+                    custom_types: {
+                        name: "customTypes.kj",
+                        badge: null,
+                        code: `-- Defining custom types with structs and enums\nmodule Untitled.Application\n  -- Simple struct\n  struct Point\n    x : Float64\n    y : Float64\n  end\n\n  -- Enum type\n  enum Color\n    Red\n    Green\n    Blue\n    Rgb(Int32, Int32, Int32)  -- Variant with data\n    Hex(String)\n  end\n\n  -- Union type\n  type Result = Ok(String) | Error(String)\n\n  function main(arguments : Array(String)) : Nil\n    point = Point{x: 1.5, y: 2.5}\n    color = Color::Rgb(255, 0, 0)\n    result = Ok("Success!")\n\n    -- Pattern matching on custom types\n    case color do\n      Color::Red -> IO.puts("Red")\n      Color::Rgb(r, g, b) -> IO.puts(\`RGB(\${r}, \${g}, \${b})\`)\n      _ -> IO.puts("Other color")\n    end\n  end\nend\n`
+                    },
+                    type_aliases: {
+                        name: "typeAliases.kj",
+                        badge: null,
+                        code: `-- Type aliases for better readability\nmodule Untitled.Application\n  -- Type aliases\n  type UserId = Int32\n  type Email = String\n  type Age = Int32\n  type Username = String\n\n  -- Record type (named tuple)\n  type User = {\n    id: UserId,\n    email: Email,\n    age: Age,\n    username: Username\n  }\n\n  -- Function type alias\n  type Comparator = Function(Int32, Int32 -> Bool)\n\n  function create_user(id : UserId, email : Email) : User\n    {\n      id: id,\n      email: email,\n      age: 0,  -- default\n      username: "user_" + to_string(id)\n    }\n  end\n\n  function main(arguments : Array(String)) : Nil\n    user = create_user(123, "alice@example.com")\n    IO.puts(\`User: \${user[:username]}\`)\n  end\nend\n`
+                    },
+                    generics: {
+                        name: "genericTypes.kj",
+                        badge: "advanced",
+                        code: `-- Generic types and functions\nmodule Untitled.Application\n  -- Generic struct\n  struct Box(T)\n    value : T\n  end\n\n  -- Generic function\n  function swap(a : T, b : T) : {T, T} forall T\n    {b, a}\n  end\n\n  -- Constrained generic\n  function compare(a : T, b : T) : Bool forall T where T: Comparable\n    a < b\n  end\n\n  -- Generic enum\n  enum Maybe(T)\n    Just(T)\n    Nothing\n  end\n\n  function main(arguments : Array(String)) : Nil\n    int_box = Box(Int32){value: 42}\n    str_box = Box(String){value: "hello"}\n\n    {x, y} = swap(10, 20)\n    IO.puts(\`Swapped: \${x}, \${y}\`)\n\n    result = Maybe::Just("Success")\n    case result do\n      Maybe::Just(value) -> IO.puts(value)\n      Maybe::Nothing -> IO.puts("No value")\n    end\n  end\nend\n`
+                    },
+                    protocols: {
+                        name: "protocols.kj",
+                        badge: "advanced",
+                        code: `-- Protocol-based polymorphism\nmodule Untitled.Application\n  -- Define a protocol\n  protocol Printable\n    function to_string(self : T) : String\n  end\n\n  -- Implement for Int32\n  impl Printable for Int32\n    function to_string(self : Int32) : String\n      "Int32: " + integer_to_string(self)\n    end\n  end\n\n  -- Implement for custom type\n  struct Person\n    name : String\n    age : Int32\n  end\n\n  impl Printable for Person\n    function to_string(self : Person) : String\n      \`Person{\${self.name}, \${self.age}}\`\n    end\n  end\n\n  -- Function using the protocol\n  function print_all(printables : Array(Printable)) : Nil\n    List.each(printables, fn(item) ->\n      IO.puts(Printable.to_string(item))\n    end)\n  end\n\n  function main(arguments : Array(String)) : Nil\n    items = [42, Person{name: "Alice", age: 30}]\n    print_all(items)\n  end\nend\n`
+                    }
+                }
+            },
+            concurrency: {
+                name: "Concurrency",
+                icon: "concurrent",
+                files: {
+                    processes: {
+                        name: "processes.kj",
+                        badge: null,
+                        code: `-- Lightweight processes (actors)\nmodule Untitled.Application\n  -- Define a process\n  process Counter\n    state count : Int32 = 0\n\n    -- Handle increment message\n    function handle(:increment) : Nil\n      count = count + 1\n      IO.puts(\`Count: \${count}\`)\n    end\n\n    -- Handle get message with reply\n    function handle(:get, from : Pid) : Nil\n      send(from, {:count, count})\n    end\n  end\n\n  function main(arguments : Array(String)) : Nil\n    -- Spawn a counter process\n    counter = spawn(Counter)\n\n    -- Send messages\n    send(counter, :increment)\n    send(counter, :increment)\n    send(counter, :increment)\n\n    -- Request current count\n    send(counter, {:get, self()})\n\n    -- Receive reply\n    receive do\n      {:count, value} -> IO.puts(\`Received count: \${value}\`)\n      after 1000 -> IO.puts("Timeout")\n    end\n  end\nend\n`
+                    },
+                    tasks: {
+                        name: "asyncTasks.kj",
+                        badge: null,
+                        code: `-- Asynchronous task execution\nmodule Untitled.Application\n  function slow_computation(name : String) : String\n    -- Simulate slow work\n    Process.sleep(1000)\n    \`Result from \${name}\`\n  end\n\n  function main(arguments : Array(String)) : Nil\n    -- Start tasks concurrently\n    task1 = Task.async(fn() -> slow_computation("Task 1") end)\n    task2 = Task.async(fn() -> slow_computation("Task 2") end)\n    task3 = Task.async(fn() -> slow_computation("Task 3") end)\n\n    -- Wait for all tasks\n    results = Task.await_all([task1, task2, task3])\n\n    -- Process results\n    List.each(results, fn(result) ->\n      IO.puts(result)\n    end)\n  end\nend\n`
+                    },
+                    channels: {
+                        name: "channels.kj",
+                        badge: "new",
+                        code: `-- Channel-based communication\nmodule Untitled.Application\n  function producer(channel : Channel(Int32), count : Int32) : Nil\n    for i in 1..count do\n      Channel.send(channel, i)\n      Process.sleep(100)  -- Simulate work\n    end\n    Channel.close(channel)\n  end\n\n  function consumer(channel : Channel(Int32)) : Nil\n    receive do\n      value when is_integer(value) ->\n        IO.puts(\`Received: \${value}\`)\n        consumer(channel)  -- Continue receiving\n      :closed ->\n        IO.puts("Channel closed")\n    end\n  end\n\n  function main(arguments : Array(String)) : Nil\n    channel = Channel.new(Int32)\n\n    -- Start producer and consumer\n    Task.async(fn() -> producer(channel, 5) end)\n    Task.async(fn() -> consumer(channel) end)\n\n    Process.sleep(2000)  -- Wait for completion\n  end\nend\n`
+                    },
+                    supervisors: {
+                        name: "supervisors.kj",
+                        badge: "advanced",
+                        code: `-- Process supervision\nmodule Untitled.Application\n  process Worker\n    state restart_count : Int32 = 0\n\n    function init() : Nil\n      IO.puts("Worker started")\n    end\n\n    function handle(:crash) : Nil\n      if restart_count < 3 do\n        restart_count = restart_count + 1\n        raise "Intentional crash"\n      else\n        IO.puts("Maximum restarts reached")\n      end\n    end\n  end\n\n  -- Supervisor strategy\n  supervisor MySupervisor\n    strategy: :one_for_one,\n    max_restarts: 3,\n    max_seconds: 5\n\n    children: [\n      worker(Worker, [])  -- Supervise Worker process\n    ]\n  end\n\n  function main(arguments : Array(String)) : Nil\n    -- Start supervised system\n    supervisor = Supervisor.start(MySupervisor)\n\n    -- Get worker pid\n    [worker_pid] = Supervisor.children(supervisor)\n\n    -- Send crash messages\n    send(worker_pid, :crash)\n    Process.sleep(1000)\n  end\nend\n`
+                    }
+                }
+            },
+            metaprogramming: {
+                name: "Metaprogramming",
+                icon: "meta",
+                files: {
+                    macros: {
+                        name: "macros.kj",
+                        badge: "advanced",
+                        code: `-- Compile-time metaprogramming with macros\nmodule Untitled.Application\n  -- Define a macro\n  macro unless(condition, do: block) : AST\n    quote do\n      if not unquote(condition) do\n        unquote(block)\n      end\n    end\n  end\n\n  -- Macro that generates functions\n  macro defproperty(name, type) : AST\n    quote do\n      function unquote(name)(self : T) : unquote(type) forall T\n        Map.get(self, unquote(name))\n      end\n\n      function unquote(name <> "!")(self : T, value : unquote(type)) : T forall T\n        Map.put(self, unquote(name), value)\n      end\n    end\n  end\n\n  function main(arguments : Array(String)) : Nil\n    -- Use the unless macro\n    x = 10\n    unless x > 20 do\n      IO.puts("x is not greater than 20")\n    end\n\n    -- Properties will be generated at compile time\n    defproperty(:name, String)\n    defproperty(:age, Int32)\n  end\nend\n`
+                    },
+                    compile_time: {
+                        name: "compileTimeCode.kj",
+                        badge: "expert",
+                        code: `-- Advanced compile-time operations\nmodule Untitled.Application\n  -- Compile-time function execution\n  @compile_time\n  function generate_constants() : Array({String, Int32})\n    [\n      {"MAX_SIZE", 1024},\n      {"TIMEOUT", 5000},\n      {"RETRY_COUNT", 3}\n    ]\n  end\n\n  -- Generate constants at compile time\n  for {name, value} in generate_constants() do\n    @constant name value\n  end\n\n  -- Type checking at compile time\n  @compile_time\n  function validate_config(config : Map) : Bool\n    required_keys = ["host", "port", "timeout"]\n    List.all?(required_keys, fn(key) -> Map.has_key?(config, key) end)\n  end\n\n  -- Configuration checked at compile time\n  @config %{\n    host: "localhost",\n    port: 8080,\n    timeout: 5000\n  }\n\n  @compile_time\n  if not validate_config(@config) do\n    raise "Invalid configuration"\n  end\n\n  function main(arguments : Array(String)) : Nil\n    IO.puts(\`Using port: \${@config[:port]}\`)\n    IO.puts(\`Max size: \${@MAX_SIZE}\`)\n  end\nend\n`
+                    }
+                }
+            },
+            interoperability: {
+                name: "Interoperability",
+                icon: "interop",
+                files: {
+                    foreign_function: {
+                        name: "Foreign Function Interface",
+                        badge: null,
+                        code: `-- Calling external C functions\nmodule Untitled.Application\n  -- Declare external C function\n  @extern "libc"\n  function getpid() : Int32\n\n  @extern "mylib"\n  function process_data(data : Pointer(UInt8), length : Int32) : Int32\n\n  function main(arguments : Array(String)) : Nil\n    -- Call C function\n    pid = getpid()\n    IO.puts(\`Process ID: \${pid}\`)\n\n    -- Pass data to C\n    data = "Hello from Konjac"\n    result = process_data(to_cstring(data), length(data))\n    IO.puts(\`Result: \${result}\`)\n  end\nend\n`
+                    },
+                    javascript_interop: {
+                        name: "JavaScript Interop",
+                        badge: null,
+                        code: `-- JavaScript interoperability in browser\nmodule Untitled.Application\n  @extern "window"\n  function alert(message : String) : Nil\n\n  @extern "document"\n  function getElementById(id : String) : JsObject\n\n  @extern "console"\n  function log(message : String) : Nil\n\n  -- JavaScript object manipulation\n  function set_text(element : JsObject, text : String) : Nil\n    Js.set_property(element, "textContent", text)\n  end\n\n  function main(arguments : Array(String)) : Nil\n    -- Call JavaScript functions\n    log("Hello from Konjac")\n    alert("Welcome!")\n\n    -- Manipulate DOM\n    element = getElementById("my-element")\n    set_text(element, "Updated by Konjac")\n  end\nend\n`
+                    }
+                }
+            }
+        };
+        
+        class KonjacCompiler {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.output = [];
+                this.errors = [];
+                this.localVariables = new Map();
+                this.nextLocalId = 0;
+                this.functions = new Map();
+            }
+
+            compile(source) {
+                this.reset();
+                try {
+                    const tokens = this.tokenize(source);
+                    const ast = this.parse(tokens);
+                    if (this.errors.length) return { success: false, errors: this.errors };
+
+                    this.generateBytecode(ast);
+                    if (this.errors.length) return { success: false, errors: this.errors };
+
+                    return {
+                        success: true,
+                        bytecode: this.output,
+                        instructions: this.output.length
+                    };
+                } catch (e) {
+                    this.errors.push({ line: 1, message: e.message });
+                    return { success: false, errors: this.errors };
+                }
+            }
+
+            generateBytecode(ast) {
+                for (const mod of ast.modules)
+                    for (const fn of mod.functions)
+                        this.functions.set(fn.name, fn);
+
+                if (!this.functions.has("main")) {
+                    this.errors.push({ line: 1, message: "No main function found" });
+                    return;
+                }
+
+                for (const fn of this.functions.values()) {
+                    this.compileFunction(fn);
+                    this.emit("EXIT_SELF");
+                }
+            }
+
+            compileFunction(fn) {
+                this.localVariables.clear();
+                this.nextLocalId = 0;
+
+                for (const p of fn.params)
+                    this.localVariables.set(p.name, this.nextLocalId++);
+
+                for (const stmt of fn.body)
+                    this.compileStatement(stmt);
+
+                this.emit("PUSH_SYMBOL", { type: "symbol", value: "normal" });
+            }
+
+            compileStatement(stmt) {
+                if (!stmt) return;
+
+                switch (stmt.type) {
+                    case "io_puts":
+                        this.compileExpression(stmt.value);
+                        this.emit("PRINT_LINE");
+                        break;
+
+                    case "assignment":
+                        this.compileExpression(stmt.value);
+                        if (!this.localVariables.has(stmt.variable))
+                            this.localVariables.set(stmt.variable, this.nextLocalId++);
+                        this.emit("STORE_LOCAL", {
+                            type: "unsignedInteger",
+                            value: this.localVariables.get(stmt.variable)
+                        });
+                        break;
+
+                    case "return":
+                        this.compileExpression(stmt.value);
+                        this.emit("RETURN");
+                        break;
+
+                    case "if":
+                        this.compileIf(stmt);
+                        break;
+
+                    case "function_call":
+                        this.compileFunctionCall(stmt);
+                        break;
+
+                    case "expression":
+                        this.compileExpression(stmt.value);
+                        break;
+                }
+            }
+
+            compileIf(stmt) {
+                this.compileExpression(stmt.condition);
+                const jumpElse = this.output.length;
+                this.emit("JUMP_UNLESS", { type: "integer", value: 0 });
+
+                for (const s of stmt.thenBody)
+                    this.compileStatement(s);
+
+                if (stmt.elseBody.length) {
+                    const jumpEnd = this.output.length;
+                    this.emit("JUMP", { type: "integer", value: 0 });
+
+                    this.output[jumpElse].value.value =
+                        this.output.length - jumpElse - 1;
+
+                    for (const s of stmt.elseBody)
+                        this.compileStatement(s);
+
+                    this.output[jumpEnd].value.value =
+                        this.output.length - jumpEnd - 1;
+                } else {
+                    this.output[jumpElse].value.value =
+                        this.output.length - jumpElse - 1;
+                }
+            }
+
+            compileFunctionCall(stmt) {
+                for (const arg of stmt.args)
+                    this.compileExpression(arg);
+
+                if (!this.functions.has(stmt.name)) {
+                    this.errors.push({
+                        line: stmt.line,
+                        message: `Unknown function ${stmt.name}`
+                    });
+                    return;
+                }
+
+                this.emit("CALL", {
+                    type: "call",
+                    name: stmt.name,
+                    argc: stmt.args.length
+                });
+            }
+
+            compileExpression(expr) {
+                if (!expr) {
+                    this.emit("PUSH_SYMBOL", { type: "symbol", value: "nil" });
+                    return;
+                }
+
+                switch (expr.type) {
+                    case "integer":
+                        this.emit("PUSH_INTEGER", { type: "integer", value: expr.value });
+                        break;
+
+                    case "float":
+                        this.emit("PUSH_FLOAT", { type: "float", value: expr.value });
+                        break;
+
+                    case "string":
+                        this.emit("PUSH_STRING", { type: "string", value: expr.value });
+                        break;
+
+                    case "boolean":
+                        this.emit("PUSH_INTEGER", {
+                            type: "integer",
+                            value: expr.value ? 1 : 0
+                        });
+                        break;
+
+                    case "nil":
+                        this.emit("PUSH_SYMBOL", { type: "symbol", value: "nil" });
+                        break;
+
+                    case "identifier":
+                        if (this.localVariables.has(expr.name))
+                            this.emit("LOAD_LOCAL", {
+                                type: "unsignedInteger",
+                                value: this.localVariables.get(expr.name)
+                            });
+                        else
+                            this.emit("PUSH_STRING", {
+                                type: "string",
+                                value: expr.name
+                            });
+                        break;
+
+                    case "binary":
+                        this.compileExpression(expr.left);
+                        this.compileExpression(expr.right);
+                        const ops = {
+                            "+": "ADD",
+                            "-": "SUBTRACT",
+                            "*": "MULTIPLY",
+                            "/": "DIVIDE",
+                            "%": "MODULO",
+                            "==": "EQUAL",
+                            "!=": "NOT_EQUAL",
+                            "<": "LESS_THAN",
+                            ">": "GREATER_THAN",
+                            "<=": "LESS_THAN_OR_EQUAL",
+                            ">=": "GREATER_THAN_OR_EQUAL"
+                        };
+                        this.emit(ops[expr.op]);
+                        break;
+
+                    case "call":
+                        for (const arg of expr.args)
+                            this.compileExpression(arg);
+                        this.emit("CALL", {
+                            type: "call",
+                            name: expr.name,
+                            argc: expr.args.length
+                        });
+                        break;
+                }
+            }
+
+            emit(opcode, value = null) {
+                const instr = { code: opcode };
+                if (value) instr.value = value;
+                this.output.push(instr);
+            }
+
+            tokenize(source) {
+                const tokens = [];
+                const lines = source.split('\n');
+                for (let ln = 0; ln < lines.length; ln++) {
+                    const line = lines[ln];
+                    let col = 0;
+                    while (col < line.length) {
+                        if (/\s/.test(line[col])) {
+                            col++;
+                            continue;
+                        }
+                        if (line.substring(col, col + 2) === '--') break;
+                        if (line[col] === '"') {
+                            let str = '';
+                            col++;
+                            while (col < line.length && line[col] !== '"') {
+                                if (line[col] === '\\' && col + 1 < line.length) {
+                                    col++;
+                                    str += line[col] === 'n' ? '\n' : line[col] === 't' ? '\t' : line[col];
+                                } else str += line[col];
+                                col++;
+                            }
+                            col++;
+                            tokens.push({
+                                type: 'STRING',
+                                value: str,
+                                line: ln + 1
+                            });
+                            continue;
+                        }
+                        if (/\d/.test(line[col]) || (line[col] === '-' && /\d/.test(line[col + 1]))) {
+                            let num = '';
+                            if (line[col] === '-') {
+                                num += '-';
+                                col++;
+                            }
+                            while (col < line.length && /[\d.]/.test(line[col])) {
+                                num += line[col];
+                                col++;
+                            }
+                            tokens.push(num.includes('.') ? {
+                                type: 'FLOAT',
+                                value: parseFloat(num),
+                                line: ln + 1
+                            } : {
+                                type: 'INTEGER',
+                                value: parseInt(num),
+                                line: ln + 1
+                            });
+                            continue;
+                        }
+                        const multiOps = ['->', '==', '!=', '<=', '>='];
+                        let foundOp = false;
+                        for (const op of multiOps) {
+                            if (line.substring(col, col + op.length) === op) {
+                                tokens.push({
+                                    type: 'OPERATOR',
+                                    value: op,
+                                    line: ln + 1
+                                });
+                                col += op.length;
+                                foundOp = true;
+                                break;
+                            }
+                        }
+                        if (foundOp) continue;
+                        if (/[=+\-*\/%<>(){}[\]:,.]/.test(line[col])) {
+                            tokens.push({
+                                type: 'PUNCTUATION',
+                                value: line[col],
+                                line: ln + 1
+                            });
+                            col++;
+                            continue;
+                        }
+                        if (/[a-zA-Z_]/.test(line[col])) {
+                            let ident = '';
+                            while (col < line.length && /[\w.]/.test(line[col])) {
+                                ident += line[col];
+                                col++;
+                            }
+                            const keywords = ['module', 'function', 'end', 'do', 'if', 'else', 'case', 'return', 'true', 'false', 'nil', 'struct', 'behaviour', 'abstract', 'type', 'cond', 'while', 'for', 'and', 'export', 'enum'];
+                            tokens.push(keywords.includes(ident) ? {
+                                type: 'KEYWORD',
+                                value: ident,
+                                line: ln + 1
+                            } : {
+                                type: 'IDENTIFIER',
+                                value: ident,
+                                line: ln + 1
+                            });
+                            continue;
+                        }
+                        col++;
+                    }
+                    tokens.push({
+                        type: 'NEWLINE',
+                        line: ln + 1
+                    });
+                }
+                tokens.push({
+                    type: 'EOF',
+                    line: lines.length
+                });
+                return tokens;
+            }
+            parse(tokens) {
+                let pos = 0;
+                const current = () => tokens[pos] || {
+                    type: 'EOF'
+                };
+                const advance = () => tokens[pos++];
+                const skipNL = () => {
+                    while (current().type === 'NEWLINE') advance();
+                };
+                const expect = (type, val) => {
+                    skipNL();
+                    const t = current();
+                    if (t.type !== type || (val !== undefined && t.value !== val)) {
+                        this.errors.push({
+                            line: t.line,
+                            message: `Expected ${val || type}`
+                        });
+                        return null;
+                    }
+                    return advance();
+                };
+                const parseProgram = () => {
+                    const program = {
+                        type: 'program',
+                        modules: []
+                    };
+                    while (current().type !== 'EOF') {
+                        skipNL();
+                        if (current().type === 'EOF') break;
+                        if (current().type === 'KEYWORD' && current().value === 'module') program.modules.push(parseModule());
+                        else advance();
+                    }
+                    return program;
+                };
+                const parseModule = () => {
+                    const line = current().line;
+                    expect('KEYWORD', 'module');
+                    const name = current().value;
+                    advance();
+                    skipNL();
+                    const mod = {
+                        type: 'module',
+                        name,
+                        functions: [],
+                        line
+                    };
+                    while (current().type !== 'EOF' && !(current().type === 'KEYWORD' && current().value === 'end')) {
+                        skipNL();
+                        if (current().type === 'KEYWORD' && current().value === 'function') mod.functions.push(parseFunction());
+                        else if (current().type === 'KEYWORD' && current().value === 'end') break;
+                        else advance();
+                    }
+                    expect('KEYWORD', 'end');
+                    return mod;
+                };
+                const parseFunction = () => {
+                    const line = current().line;
+                    expect('KEYWORD', 'function');
+                    const name = current().value;
+                    advance();
+                    expect('PUNCTUATION', '(');
+                    const params = [];
+                    while (current().value !== ')' && current().type !== 'EOF') {
+                        skipNL();
+                        if (current().type === 'IDENTIFIER') {
+                            const pn = current().value;
+                            advance();
+                            let pt = 'Any';
+                            if (current().value === ':') {
+                                advance();
+                                pt = current().value;
+                                advance();
+                                // Handle parameterized types like Array(String)
+                                if (current().value === '(') {
+                                    pt += '(';
+                                    advance();
+                                    while (current().value !== ')' && current().type !== 'EOF') {
+                                        pt += current().value;
+                                        advance();
+                                    }
+                                    if (current().value === ')') {
+                                        pt += ')';
+                                        advance();
+                                    }
+                                }
+                            }
+                            params.push({
+                                name: pn,
+                                type: pt
+                            });
+                            if (current().value === ',') advance();
+                        } else break;
+                    }
+                    expect('PUNCTUATION', ')');
+                    let returnType = 'Nil';
+                    if (current().value === ':') {
+                        advance();
+                        returnType = current().value;
+                        advance();
+                    }
+                    const body = [];
+                    skipNL();
+                    while (current().type !== 'EOF' && !(current().type === 'KEYWORD' && current().value === 'end')) {
+                        skipNL();
+                        if (current().type === 'KEYWORD' && current().value === 'end') break;
+                        const stmt = parseStatement();
+                        if (stmt) body.push(stmt);
+                    }
+                    expect('KEYWORD', 'end');
+                    return {
+                        type: 'function',
+                        name,
+                        params,
+                        returnType,
+                        body,
+                        line
+                    };
+                };
+                const parseStatement = () => {
+                    skipNL();
+                    const line = current().line;
+                    if (current().type === 'KEYWORD' && current().value === 'return') {
+                        advance();
+                        return {
+                            type: 'return',
+                            value: parseExpression(),
+                            line
+                        };
+                    }
+                    if (current().type === 'KEYWORD' && current().value === 'if') return parseIf();
+                    if (current().type === 'IDENTIFIER') {
+                        const name = current().value;
+                        advance();
+                        if (current().value === '=') {
+                            advance();
+                            return {
+                                type: 'assignment',
+                                variable: name,
+                                value: parseExpression(),
+                                line
+                            };
+                        }
+                        if (current().value === '(') {
+                            advance();
+                            const args = [];
+                            while (current().value !== ')' && current().type !== 'EOF') {
+                                args.push(parseExpression());
+                                if (current().value === ',') advance();
+                            }
+                            expect('PUNCTUATION', ')');
+                            if (name === 'IO.puts') return {
+                                type: 'io_puts',
+                                value: args[0],
+                                line
+                            };
+                            return {
+                                type: 'function_call',
+                                name,
+                                args,
+                                line
+                            };
+                        }
+                        return {
+                            type: 'expression',
+                            value: {
+                                type: 'identifier',
+                                name
+                            },
+                            line
+                        };
+                    }
+                    if (current().type !== 'NEWLINE' && current().type !== 'EOF') advance();
+                    return null;
+                };
+                const parseIf = () => {
+                    const line = current().line;
+                    expect('KEYWORD', 'if');
+                    const condition = parseExpression();
+                    skipNL();
+                    if (current().type === 'KEYWORD' && current().value === 'do') advance();
+                    const thenBody = [],
+                        elseBody = [];
+                    while (current().type !== 'EOF' && !(current().type === 'KEYWORD' && (current().value === 'else' || current().value === 'end'))) {
+                        skipNL();
+                        if (current().type === 'KEYWORD' && (current().value === 'else' || current().value === 'end')) break;
+                        const stmt = parseStatement();
+                        if (stmt) thenBody.push(stmt);
+                    }
+                    if (current().type === 'KEYWORD' && current().value === 'else') {
+                        advance();
+                        skipNL();
+                        while (current().type !== 'EOF' && !(current().type === 'KEYWORD' && current().value === 'end')) {
+                            skipNL();
+                            if (current().type === 'KEYWORD' && current().value === 'end') break;
+                            const stmt = parseStatement();
+                            if (stmt) elseBody.push(stmt);
+                        }
+                    }
+                    expect('KEYWORD', 'end');
+                    return {
+                        type: 'if',
+                        condition,
+                        thenBody,
+                        elseBody,
+                        line
+                    };
+                };
+                const parseExpression = () => parseComparison();
+                const parseComparison = () => {
+                    let left = parseAdditive();
+                    while (['==', '!=', '<', '>', '<=', '>='].includes(current().value)) {
+                        const op = current().value;
+                        advance();
+                        left = {
+                            type: 'binary',
+                            op,
+                            left,
+                            right: parseAdditive()
+                        };
+                    }
+                    return left;
+                };
+                const parseAdditive = () => {
+                    let left = parseMultiplicative();
+                    while (['+', '-'].includes(current().value)) {
+                        const op = current().value;
+                        advance();
+                        left = {
+                            type: 'binary',
+                            op,
+                            left,
+                            right: parseMultiplicative()
+                        };
+                    }
+                    return left;
+                };
+                const parseMultiplicative = () => {
+                    let left = parsePrimary();
+                    while (['*', '/', '%'].includes(current().value)) {
+                        const op = current().value;
+                        advance();
+                        left = {
+                            type: 'binary',
+                            op,
+                            left,
+                            right: parsePrimary()
+                        };
+                    }
+                    return left;
+                };
+                const parsePrimary = () => {
+                    skipNL();
+                    const tok = current();
+                    if (tok.type === 'INTEGER') {
+                        advance();
+                        return {
+                            type: 'integer',
+                            value: tok.value
+                        };
+                    }
+                    if (tok.type === 'FLOAT') {
+                        advance();
+                        return {
+                            type: 'float',
+                            value: tok.value
+                        };
+                    }
+                    if (tok.type === 'STRING') {
+                        advance();
+                        return {
+                            type: 'string',
+                            value: tok.value
+                        };
+                    }
+                    if (tok.type === 'KEYWORD' && tok.value === 'true') {
+                        advance();
+                        return {
+                            type: 'boolean',
+                            value: true
+                        };
+                    }
+                    if (tok.type === 'KEYWORD' && tok.value === 'false') {
+                        advance();
+                        return {
+                            type: 'boolean',
+                            value: false
+                        };
+                    }
+                    if (tok.type === 'KEYWORD' && tok.value === 'nil') {
+                        advance();
+                        return {
+                            type: 'nil'
+                        };
+                    }
+                    if (tok.type === 'IDENTIFIER') {
+                        const name = tok.value;
+                        advance();
+                        if (current().value === '(') {
+                            advance();
+                            const args = [];
+                            while (current().value !== ')' && current().type !== 'EOF') {
+                                args.push(parseExpression());
+                                if (current().value === ',') advance();
+                            }
+                            expect('PUNCTUATION', ')');
+                            return {
+                                type: 'call',
+                                name,
+                                args
+                            };
+                        }
+                        return {
+                            type: 'identifier',
+                            name
+                        };
+                    }
+                    if (tok.value === '(') {
+                        advance();
+                        const expr = parseExpression();
+                        expect('PUNCTUATION', ')');
+                        return expr;
+                    }
+                    if (tok.value === '_') {
+                        advance();
+                        return {
+                            type: 'wildcard'
+                        };
+                    }
+                    advance();
+                    return {
+                        type: 'nil'
+                    };
+                };
+                return parseProgram();
+            }
+        }
+
+        class KonjacDecompiler {
+            constructor() {
+                this.reset();
+            }
+
+            reset() {
+                this.output = [];
+                this.indent = 0;
+                this.localNames = new Map();
+                this.nextLocalName = 0;
+                this.stack = [];
+            }
+
+            decompile(bytecode) {
+                this.reset();
+                try {
+                    const instructions = typeof bytecode === "string"
+                        ? JSON.parse(bytecode)
+                        : bytecode;
+
+                    if (!Array.isArray(instructions))
+                        return { success: false, error: "Invalid bytecode format" };
+
+                    this.output.push("-- Decompiled from bytecode");
+                    this.output.push("module Decompiled.Application");
+
+                    this.indent = 1;
+                    this.output.push(this.line("function main(arguments : Array(String)) : Nil"));
+                    this.indent = 2;
+
+                    for (let i = 0; i < instructions.length; i++) {
+                        i = this.decompileInstruction(instructions, i).nextIndex - 1;
+                    }
+
+                    this.indent = 1;
+                    this.output.push(this.line("end"));
+                    this.indent = 0;
+                    this.output.push("end");
+
+                    return {
+                        success: true,
+                        source: this.output.join("\n")
+                    };
+                } catch (e) {
+                    return { success: false, error: e.message };
+                }
+            }
+
+            line(text) {
+                return "  ".repeat(this.indent) + text;
+            }
+
+            getLocalName(index) {
+                if (!this.localNames.has(index))
+                    this.localNames.set(index, `var${this.nextLocalName++}`);
+                return this.localNames.get(index);
+            }
+
+            formatValue(value) {
+                if (!value) return "nil";
+                if (value.type === "string") return `"${value.value}"`;
+                if (value.type === "integer" || value.type === "float")
+                    return String(value.value);
+                if (value.type === "symbol") return `:${value.value}`;
+                return "nil";
+            }
+
+            decompileInstruction(instructions, index) {
+                const instr = instructions[index];
+                if (!instr) return { nextIndex: index + 1 };
+
+                const { code, value } = instr;
+
+                switch (code) {
+                    case "PUSH_INTEGER":
+                    case "PUSH_FLOAT":
+                    case "PUSH_STRING":
+                    case "PUSH_SYMBOL":
+                        this.stack.push(this.formatValue(value));
+                        return { nextIndex: index + 1 };
+
+                    case "LOAD_LOCAL":
+                        this.stack.push(this.getLocalName(value.value));
+                        return { nextIndex: index + 1 };
+
+                    case "STORE_LOCAL": {
+                        const rhs = this.stack.pop() ?? "nil";
+                        const name = this.getLocalName(value.value);
+                        this.output.push(this.line(`${name} = ${rhs}`));
+                        return { nextIndex: index + 1 };
+                    }
+
+                    case "PRINT_LINE": {
+                        const arg = this.stack.pop() ?? "nil";
+                        this.output.push(this.line(`IO.puts(${arg})`));
+                        return { nextIndex: index + 1 };
+                    }
+
+                    case "ADD":
+                    case "SUBTRACT":
+                    case "MULTIPLY":
+                    case "DIVIDE":
+                    case "MODULO":
+                    case "EQUAL":
+                    case "NOT_EQUAL":
+                    case "LESS_THAN":
+                    case "GREATER_THAN":
+                    case "LESS_THAN_OR_EQUAL":
+                    case "GREATER_THAN_OR_EQUAL": {
+                        const b = this.stack.pop() ?? "nil";
+                        const a = this.stack.pop() ?? "nil";
+                        const map = {
+                            ADD: "+",
+                            SUBTRACT: "-",
+                            MULTIPLY: "*",
+                            DIVIDE: "/",
+                            MODULO: "%",
+                            EQUAL: "==",
+                            NOT_EQUAL: "!=",
+                            LESS_THAN: "<",
+                            GREATER_THAN: ">",
+                            LESS_THAN_OR_EQUAL: "<=",
+                            GREATER_THAN_OR_EQUAL: ">="
+                        };
+                        this.stack.push(`${a} ${map[code]} ${b}`);
+                        return { nextIndex: index + 1 };
+                    }
+
+                    case "CALL": {
+                        const args = [];
+                        for (let i = 0; i < value.argc; i++)
+                            args.unshift(this.stack.pop() ?? "nil");
+
+                        const callExpr = `${value.name}(${args.join(", ")})`;
+                        this.stack.push(callExpr);
+                        return { nextIndex: index + 1 };
+                    }
+
+                    case "RETURN": {
+                        const ret = this.stack.pop();
+                        if (ret && ret !== "nil")
+                            this.output.push(this.line(`return ${ret}`));
+                        else
+                            this.output.push(this.line("return"));
+                        return { nextIndex: index + 1 };
+                    }
+
+                    case "JUMP":
+                    case "JUMP_UNLESS":
+                        this.output.push(this.line(`-- ${code} ${value?.value ?? ""}`));
+                        return { nextIndex: index + 1 };
+
+                    case "EXIT_SELF":
+                        return { nextIndex: index + 1 };
+
+                    default:
+                        return { nextIndex: index + 1 };
+                }
+            }
+        }
+
+        class DebuggerClient {
+            constructor() {
+                this.ws = null;
+                this.compiler = new KonjacCompiler();
+                this.decompiler = new KonjacDecompiler();
+            }
+            connect() {
+                logOutput('Connecting...', 'socket');
+                updateConnectionStatus('connecting', 'Connecting...');
+                try {
+                    this.ws = new WebSocket(config.websocketUrl);
+                    this.ws.onopen = () => {
+                        state.isConnected = true;
+                        updateConnectionStatus('connected', 'Connected');
+                        logOutput('Connected', 'socket');
+                        this.send({
+                            command: 'init',
+                            iterationLimit: 100000
+                        });
+                    };
+                    this.ws.onclose = () => {
+                        state.isConnected = false;
+                        state.isInitialized = false;
+                        state.isRunning = false;
+                        state.isPaused = false;
+                        updateConnectionStatus('', 'Disconnected');
+                        logOutput('Disconnected', 'socket');
+                        updateButtonStates();
+                    };
+                    this.ws.onerror = () => {
+                        logOutput('Connection error', 'error');
+                    };
+                    this.ws.onmessage = (e) => {
+                        this.handleMessage(JSON.parse(e.data));
+                    };
+                } catch (e) {
+                    logOutput('Failed to connect: ' + e.message, 'error');
+                    updateConnectionStatus('', 'Disconnected');
+                }
+            }
+            disconnect() {
+                if (this.ws) this.ws.close();
+                state.isConnected = false;
+                state.isInitialized = false;
+                updateConnectionStatus('', 'Disconnected');
+                updateButtonStates();
+            }
+            send(data) {
+                if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+                    this.ws.send(JSON.stringify(data));
+                    logOutput('Sent: ' + data.command, 'socket');
+                } else logOutput('Not connected', 'error');
+            }
+            handleMessage(msg) {
+                logOutput('Received: ' + msg.type, 'socket');
+                if (msg.type === 'initialized') {
+                    state.isInitialized = true;
+                    updateButtonStates();
+                    logOutput('VM initialized', 'compile');
+                    this.syncBreakpoints();
+                } else if (msg.type === 'loaded') logOutput('Program loaded: ' + msg.instructionCount + ' instructions', 'compile');
+                else if (msg.type === 'running') {
+                    state.isRunning = true;
+                    state.isPaused = false;
+                    updateButtonStates();
+                    logOutput('Execution started', 'compile');
+                } else if (msg.type === 'executionComplete') {
+                    state.isRunning = false;
+                    state.isPaused = false;
+                    updateButtonStates();
+                    clearProcessState();
+                    logOutput('Execution complete', 'compile');
+                } else if (msg.type === 'breakpointHit') {
+                    state.isPaused = true;
+                    state.isRunning = true;
+                    updateButtonStates();
+                    updateProcessState(msg.data);
+                    logOutput('Breakpoint hit at counter ' + msg.data.counter, 'breakpoint');
+                } else if (msg.type === 'breakpointAdded') {
+                    const localBp = Array.from(state.breakpoints.entries()).find(([id, bp]) => bp.type === msg.conditionType && bp.value === msg.value && bp.status === 'pending');
+                    if (localBp) {
+                        localBp[1].serverId = msg.id;
+                        localBp[1].status = 'confirmed';
+                        updateBreakpointsList();
+                    }
+                    logOutput('Breakpoint confirmed: ' + msg.conditionType + ' = ' + msg.value, 'breakpoint');
+                } else if (msg.type === 'stdout') logOutput(msg.data, 'stdout');
+                else if (msg.type === 'error') logOutput(msg.message, 'error');
+            }
+            loadProgram() {
+                if (!state.isConnected || !state.isInitialized) {
+                    logOutput('Not ready', 'error');
+                    return;
+                }
+                try {
+                    const parsed = JSON.parse(bytecodeViewer.getValue());
+                    this.send({
+                        command: 'load',
+                        instructions: parsed
+                    });
+                } catch (e) {
+                    logOutput('Invalid JSON: ' + e.message, 'error');
+                }
+            }
+            run() {
+                if (!state.isInitialized) {
+                    logOutput('Not initialized', 'error');
+                    return;
+                }
+                this.loadProgram();
+                setTimeout(() => this.send({
+                    command: 'run'
+                }), 100);
+            }
+            step() {
+                if (!state.isPaused) {
+                    logOutput('Not paused', 'error');
+                    return;
+                }
+                this.send({
+                    command: 'step'
+                });
+            }
+            continue() {
+                if (!state.isPaused) {
+                    logOutput('Not paused', 'error');
+                    return;
+                }
+                this.send({
+                    command: 'continue'
+                });
+            }
+            addBreakpoint() {
+                const type = elements.bpType.value,
+                    value = parseInt(elements.bpValue.value) || 0;
+                if (value < 0) {
+                    logOutput('Value must be >= 0', 'error');
+                    return;
+                }
+                const id = 'bp_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+                state.breakpoints.set(id, {
+                    type,
+                    value,
+                    status: state.isConnected && state.isInitialized ? 'pending' : 'local',
+                    serverId: null
+                });
+                updateBreakpointsList();
+                if (state.isConnected && state.isInitialized) {
+                    this.send({
+                        command: 'addBreakpoint',
+                        conditionType: type,
+                        value: value
+                    });
+                    logOutput('Adding breakpoint: ' + type + ' = ' + value, 'breakpoint');
+                } else logOutput('Breakpoint queued: ' + type + ' = ' + value, 'breakpoint');
+                elements.bpValue.value = '0';
+            }
+            removeBreakpoint(id) {
+                const bp = state.breakpoints.get(id);
+                if (bp && bp.serverId && state.isConnected && state.isInitialized) this.send({
+                    command: 'removeBreakpoint',
+                    id: bp.serverId
+                });
+                state.breakpoints.delete(id);
+                updateBreakpointsList();
+                logOutput('Breakpoint removed', 'breakpoint');
+            }
+            syncBreakpoints() {
+                if (!state.isConnected || !state.isInitialized) return;
+                for (const [id, bp] of state.breakpoints) {
+                    if (bp.status === 'local') {
+                        bp.status = 'pending';
+                        this.send({
+                            command: 'addBreakpoint',
+                            conditionType: bp.type,
+                            value: bp.value
+                        });
+                    }
+                }
+                updateBreakpointsList();
+            }
+        }
+
+        const debuggerClient = new DebuggerClient();
+
+        async function initializeApp() {
+            elements.examplesTree = document.getElementById('examplesTree');
+            elements.stackList = document.getElementById('stackList');
+            elements.localsList = document.getElementById('localsList');
+            elements.breakpointsList = document.getElementById('breakpointsList');
+            elements.outputTab = document.getElementById('outputTab');
+            elements.statCounter = document.getElementById('statCounter');
+            elements.statCallDepth = document.getElementById('statCallDepth');
+            elements.instructionCode = document.getElementById('instructionCode');
+            elements.currentInstruction = document.getElementById('currentInstruction');
+            elements.stackCount = document.getElementById('stackCount');
+            elements.localsCount = document.getElementById('localsCount');
+            elements.bpCount = document.getElementById('bpCount');
+            elements.currentFile = document.getElementById('currentFile');
+            elements.lineInfo = document.getElementById('lineInfo');
+            elements.connectionInfo = document.getElementById('connectionInfo');
+            elements.btnConnect = document.getElementById('btnConnect');
+            elements.btnCompile = document.getElementById('btnCompile');
+            elements.btnDecompile = document.getElementById('btnDecompile');
+            elements.btnRun = document.getElementById('btnRun');
+            elements.btnStep = document.getElementById('btnStep');
+            elements.btnContinue = document.getElementById('btnContinue');
+            elements.btnAddBp = document.getElementById('btnAddBp');
+            elements.bpType = document.getElementById('bpType');
+            elements.bpValue = document.getElementById('bpValue');
+            elements.bpHint = document.getElementById('bpHint');
+            buildExamplesTree();
+            await initializeEditors();
+            setupEventListeners();
+            setupResizableSplit();
+            if (config.autoconnect) setTimeout(() => debuggerClient.connect(), 500);
+            logOutput('Konjac IDE initialized', 'compile');
+        }
+
+        function buildExamplesTree() {
+            let html = '';
+            html += `<div class="folder"><div class="folder-header" onclick="toggleFolder(this.parentElement)"><span class="folder-icon">${ICONS.chevron}</span><span class="folder-icon folder-type">${ICONS.folder}</span><span class="folder-name">Konjac Examples</span></div><div class="folder-contents">`;
+            for (const [catId, cat] of Object.entries(KONJAC_EXAMPLES)) {
+                html += `<div class="folder"><div class="folder-header" onclick="toggleFolder(this.parentElement)"><span class="folder-icon">${ICONS.chevron}</span><span class="folder-icon folder-type">${ICONS.folder}</span><span class="folder-name">${cat.name}</span></div><div class="folder-contents">`;
+                for (const [fileId, file] of Object.entries(cat.files)) {
+                    const badge = file.badge ? `<span class="file-badge ${file.badge}">${file.badge}</span>` : '';
+                    html += `<div class="file-item" onclick="loadKonjacExample('${catId}', '${fileId}')"><span class="file-icon ${cat.icon}">${ICONS.file}</span><span class="file-name">${file.name}</span>${badge}</div>`;
+                }
+                html += `</div></div>`;
+            }
+            html += `</div></div>`;
+            elements.examplesTree.innerHTML = html;
+        }
+
+        async function initializeEditors() {
+            require.config({
+                paths: {
+                    vs: 'https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs'
+                }
+            });
+            return new Promise((resolve) => {
+                require(['vs/editor/editor.main'], function () {
+                    monaco.editor.defineTheme('jellyDark', {
+                        base: 'vs-dark',
+                        inherit: true,
+                        rules: [{
+                            token: 'keyword',
+                            foreground: '8b5cf6'
+                        }, {
+                            token: 'string',
+                            foreground: '22c55e'
+                        }, {
+                            token: 'number',
+                            foreground: 'f59e0b'
+                        }, {
+                            token: 'comment',
+                            foreground: '6b7280'
+                        }],
+                        colors: {
+                            'editor.background': '#111113',
+                            'editor.foreground': '#e4e4e7',
+                            'editor.lineHighlightBackground': '#1f1f23'
+                        }
+                    });
+                    monaco.languages.register({
+                        id: 'konjac'
+                    });
+                    monaco.languages.setMonarchTokensProvider('konjac', {
+                        defaultToken: '',
+                        keywords: ['module', 'function', 'end', 'do', 'if', 'else', 'case', 'return', 'true', 'false', 'nil', 'behaviour', 'abstract'],
+                        tokenizer: {
+                            root: [
+                                [/[a-zA-Z_][\w]*/, {
+                                    cases: {
+                                        '@keywords': 'keyword',
+                                        '@default': 'identifier'
+                                    }
+                                }],
+                                [/[ \t\r\n]+/, 'white'],
+                                [/--.*$/, 'comment'],
+                                [/"/, 'string', '@string'],
+                                [/\d+/, 'number']
+                            ],
+                            string: [
+                                [/[^\\"]+/, 'string'],
+                                [/\\./, 'string.escape'],
+                                [/"/, 'string', '@pop']
+                            ]
+                        }
+                    });
+                    konjacEditor = monaco.editor.create(document.getElementById('konjacEditor'), {
+                        value: '-- Currently only some parts of the language are supported',
+                        language: 'konjac',
+                        theme: 'jellyDark',
+                        fontSize: 13,
+                        fontFamily: "'JetBrains Mono', monospace",
+                        minimap: {
+                            enabled: false
+                        },
+                        automaticLayout: true
+                    });
+                    bytecodeViewer = monaco.editor.create(document.getElementById('bytecodeViewer'), {
+                        value: '',
+                        language: 'json',
+                        theme: 'jellyDark',
+                        fontSize: 12,
+                        fontFamily: "'JetBrains Mono', monospace",
+                        minimap: {
+                            enabled: false
+                        },
+                        automaticLayout: true
+                    });
+                    konjacEditor.onDidChangeCursorPosition(() => {
+                        const pos = konjacEditor.getPosition();
+                        elements.lineInfo.textContent = `Line ${pos.lineNumber}, Column ${pos.column}`;
+                    });
+                    resolve();
+                });
+            });
+        }
+
+        function setupEventListeners() {
+            elements.btnConnect.addEventListener('click', () => {
+                if (state.isConnected) debuggerClient.disconnect();
+                else debuggerClient.connect();
+            });
+            elements.btnCompile.addEventListener('click', compileKonjac);
+            elements.btnDecompile.addEventListener('click', decompileBytecode);
+            elements.btnRun.addEventListener('click', () => debuggerClient.run());
+            elements.btnStep.addEventListener('click', () => debuggerClient.step());
+            elements.btnContinue.addEventListener('click', () => debuggerClient.continue());
+            elements.btnAddBp.addEventListener('click', () => debuggerClient.addBreakpoint());
+            elements.bpType.addEventListener('change', () => {
+                const hints = {
+                    'counter': 'Break when instruction counter equals value',
+                    'minStackDepth': 'Break when call stack depth >= value',
+                    'maxStackDepth': 'Break when call stack depth <= value',
+                    'stackSize': 'Break when data stack has exactly N items'
+                };
+                elements.bpHint.textContent = hints[elements.bpType.value] || '';
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.ctrlKey && e.key === 'b') {
+                    e.preventDefault();
+                    compileKonjac();
+                } else if (e.ctrlKey && e.key === 'd') {
+                    e.preventDefault();
+                    decompileBytecode();
+                } else if (e.key === 'F5') {
+                    e.preventDefault();
+                    debuggerClient.run();
+                } else if (e.key === 'F10') {
+                    e.preventDefault();
+                    debuggerClient.step();
+                } else if (e.key === 'F8') {
+                    e.preventDefault();
+                    debuggerClient.continue();
+                }
+            });
+        }
+
+        function setupResizableSplit() {
+            const divider = document.getElementById('verticalDivider');
+            let isResizing = false;
+            divider.addEventListener('mousedown', () => {
+                isResizing = true;
+                document.body.style.cursor = 'col-resize';
+                document.body.style.userSelect = 'none';
+            });
+            document.addEventListener('mousemove', (e) => {
+                if (!isResizing) return;
+                const container = divider.parentElement;
+                const leftPane = divider.previousElementSibling;
+                const rightPane = divider.nextElementSibling;
+                const rect = container.getBoundingClientRect();
+                const leftWidth = e.clientX - rect.left;
+                const rightWidth = rect.width - leftWidth - divider.offsetWidth;
+                if (leftWidth > 100 && rightWidth > 100) {
+                    leftPane.style.flex = `0 0 ${leftWidth}px`;
+                    rightPane.style.flex = `0 0 ${rightWidth}px`;
+                }
+            });
+            document.addEventListener('mouseup', () => {
+                isResizing = false;
+                document.body.style.cursor = '';
+                document.body.style.userSelect = '';
+            });
+        }
+
+        function loadKonjacExample(category, fileId) {
+            const file = KONJAC_EXAMPLES[category].files[fileId];
+            if (!file) return;
+            konjacEditor.setValue(file.code);
+            elements.currentFile.textContent = file.name;
+            logOutput('Loaded: ' + file.name, 'compile');
+            compileKonjac();
+        }
+
+        function toggleFolder(folder) {
+            folder.classList.toggle('open');
+        }
+
+        function compileKonjac() {
+            const result = debuggerClient.compiler.compile(konjacEditor.getValue());
+            if (result.success) {
+                bytecodeViewer.setValue(JSON.stringify(result.bytecode, null, 2));
+                logOutput('Compiled: ' + result.instructions + ' instructions', 'compile');
+                if (state.isConnected && state.isInitialized) setTimeout(() => debuggerClient.loadProgram(), 100);
+            } else result.errors.forEach(e => logOutput('Error (line ' + e.line + '): ' + e.message, 'error'));
+        }
+
+        function decompileBytecode() {
+            const result = debuggerClient.decompiler.decompile(bytecodeViewer.getValue());
+            if (result.success) {
+                konjacEditor.setValue(result.source);
+                elements.currentFile.textContent = 'Decompiled.kj';
+                logOutput('Decompiled successfully', 'compile');
+            } else logOutput('Decompile failed: ' + result.error, 'error');
+        }
+
+        function updateConnectionStatus(status, text) {
+            elements.connectionInfo.textContent = text;
+            const btn = elements.btnConnect;
+            if (status === 'connected') {
+                btn.innerHTML = '<span>✓</span><span>Disconnect</span>';
+                btn.classList.remove('connect');
+                btn.classList.add('primary');
+            } else {
+                btn.innerHTML = '<span>↻</span><span>Connect</span>';
+                btn.classList.add('connect');
+                btn.classList.remove('primary');
+            }
+            updateButtonStates();
+        }
+
+        function updateButtonStates() {
+            elements.btnRun.disabled = !state.isInitialized || state.isRunning;
+            elements.btnStep.disabled = !state.isPaused;
+            elements.btnContinue.disabled = !state.isPaused;
+        }
+
+        function updateProcessState(data) {
+            elements.statCounter.textContent = data.counter ?? '—';
+            elements.statCallDepth.textContent = data.callStackDepth ?? '—';
+            if (data.instruction) {
+                elements.currentInstruction.style.display = 'block';
+                elements.instructionCode.textContent = data.instruction;
+            }
+            if (data.stack) updateStackList(data.stack);
+            if (data.locals) updateLocalsList(data.locals);
+        }
+
+        function clearProcessState() {
+            elements.statCounter.textContent = '—';
+            elements.statCallDepth.textContent = '—';
+            elements.currentInstruction.style.display = 'none';
+            updateStackList([]);
+            updateLocalsList([]);
+        }
+
+        function updateStackList(stack) {
+            elements.stackCount.textContent = stack.length;
+            elements.stackList.innerHTML = stack.length === 0 ? '<div class="empty-state">Empty stack</div>' : stack.map((v, i) => `<div class="state-item"><span class="state-index">${stack.length - 1 - i}</span><span class="state-value">${escapeHtml(String(v))}</span></div>`).join('');
+        }
+
+        function updateLocalsList(locals) {
+            elements.localsCount.textContent = locals.length;
+            elements.localsList.innerHTML = locals.length === 0 ? '<div class="empty-state">No locals</div>' : locals.map((v, i) => `<div class="state-item"><span class="state-index">${i}</span><span class="state-value">${escapeHtml(String(v))}</span></div>`).join('');
+        }
+
+        function updateBreakpointsList() {
+            elements.bpCount.textContent = state.breakpoints.size;
+            if (state.breakpoints.size === 0) {
+                elements.breakpointsList.innerHTML = '<div class="empty-state">No breakpoints set</div>';
+                return;
+            }
+            let html = '';
+            state.breakpoints.forEach((bp, id) => {
+                const statusClass = bp.status === 'confirmed' ? 'confirmed' : bp.status === 'pending' ? 'pending' : '';
+                const statusText = bp.status === 'confirmed' ? '✓' : bp.status === 'pending' ? '⏳' : '○';
+                const typeLabels = {
+                    'counter': 'Counter',
+                    'minStackDepth': 'Min Depth',
+                    'maxStackDepth': 'Max Depth',
+                    'stackSize': 'Stack Size'
+                };
+                html += `<div class="breakpoint-item ${statusClass}"><div class="breakpoint-info"><span><span class="breakpoint-type">${typeLabels[bp.type] || bp.type}</span> = ${bp.value}</span><span class="breakpoint-id">${statusText} ${bp.serverId ? 'ID: ' + bp.serverId.substring(0, 8) : 'Local'}</span></div><button class="breakpoint-remove" onclick="debuggerClient.removeBreakpoint('${id}')">×</button></div>`;
+            });
+            elements.breakpointsList.innerHTML = html;
+        }
+
+        function logOutput(message, type = 'info') {
+            const time = new Date().toLocaleTimeString();
+            const prefixMap = {
+                'stdout': 'PRINT',
+                'error': 'ERROR',
+                'compile': 'COMPILER',
+                'socket': 'SOCKET',
+                'breakpoint': 'BREAKPOINT',
+                'info': 'INFO'
+            };
+            const line = document.createElement('div');
+            line.className = 'output-line';
+            line.innerHTML = `<span class="output-time">${time}</span><span class="output-prefix ${type}">[${prefixMap[type] || 'LOG'}]</span><span class="output-message">${escapeHtml(message)}</span>`;
+            elements.outputTab.appendChild(line);
+            elements.outputTab.scrollTop = elements.outputTab.scrollHeight;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+        document.addEventListener('DOMContentLoaded', initializeApp);
+    </script>
+</body>
+
+</html>
