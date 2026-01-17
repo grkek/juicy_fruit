@@ -30,7 +30,6 @@ module Rum.Response
   ]
   
   export function encode(response : Rum.Response) : Binary
-    
     reasonPhrase : String = case response.statusCode
       when 200, do: "OK"
       when 201, do: "Created"
@@ -70,6 +69,19 @@ module Rum.Context
     request: Rum.Request;
     response: Rum.Response;
   ]
+
+  export function getRequestHeader(context : Rum.Context, key : String, value : String? = nil) : String?,
+    do: Map.get(context.request.headers, key, value)
+
+  export function setResponseHeader(context : Rum.Context, key : String, value : String) : Rum.Context
+    Rum.Context { 
+      request: context.request,
+      response: Rum.Response {
+        headers: Map.put(context.response.headers, key, value),
+        ...context.response
+        }
+      } 
+  end
 end
 
 behaviour Rum.Handler
