@@ -102,8 +102,9 @@ module Rum.Server
         {key: value}
       end)
       |> Map.zip()
-      
-    [method, path, "HTTP/1.1"] = startLine |> String.split(" ") |> String.stripSuffix()
+    
+    -- Short hand function call
+    [method, path, "HTTP/1.1"] = startLine |> String.split(" ") |> Array.map(&String.stripSuffix/1)
 
     context = 
       Rum.Context { 
