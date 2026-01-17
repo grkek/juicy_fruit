@@ -196,13 +196,16 @@
         }
 
         .sidebar-header {
-            padding: 0.75rem 1rem;
+            padding: 0 1rem;
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             color: var(--text-muted);
             border-bottom: 1px solid var(--border-color);
             background: var(--bg-tertiary);
+            height: 41px;
+            display: flex;
+            align-items: center;
         }
 
         .examples-browser {
@@ -355,6 +358,13 @@
         .central-split {
             flex: 1;
             display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .editors-row {
+            flex: 1;
+            display: flex;
             overflow: hidden;
             position: relative;
         }
@@ -482,6 +492,17 @@
             justify-content: space-between;
         }
 
+        .state-section-header-breakpoints {
+            font-size: 0.6875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 14px;
+        }
+
         .state-badge {
             font-size: 0.625rem;
             padding: 0.125rem 0.375rem;
@@ -594,16 +615,18 @@
         }
 
         .panel-header {
-            padding: 0.5rem 1rem;
+            padding: 0 1rem;
             font-size: 0.75rem;
             text-transform: uppercase;
             letter-spacing: 0.05em;
             color: var(--text-muted);
-            border-bottom: 1px solid var(--border-color);
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-tertiary);
             display: flex;
             align-items: center;
-            gap: 1rem;
+            justify-content: space-between;
             user-select: none;
+            height: 41px;
         }
 
         .panel-tabs {
@@ -947,7 +970,7 @@
                 <div class="breakpoint-content" id="breakpointContent">
                     <div class="breakpoints-panel">
                         <div class="state-section">
-                            <div class="state-section-header">Add Breakpoint</div>
+                            <div class="state-section-header-breakpoints">Add Breakpoint</div>
                             <div class="add-breakpoint-form">
                                 <div class="control-group">
                                     <div class="control-label">Condition Type</div>
@@ -973,86 +996,93 @@
                     </div>
                 </div>
             </div>
+
             <div class="central-split">
-                <div class="split-container">
-                    <div class="split-pane">
-                        <div class="editor-container">
-                            <div class="editor-header"><span>Konjac Source</span></div>
-                            <div class="editor-content">
-                                <div id="konjacEditor" style="width: 100%; height: 100%;"></div>
+                <div class="editors-row">
+                    <div class="split-container">
+                        <div class="split-pane">
+                            <div class="editor-container">
+                                <div class="editor-header"><span>Konjac Source</span></div>
+                                <div class="editor-content">
+                                    <div id="konjacEditor" style="width: 100%; height: 100%;"></div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="split-divider" id="verticalDivider"></div>
-                    <div class="split-pane">
-                        <div class="bytecode-container">
-                            <div class="bytecode-header"><span>Compiled Bytecode</span></div>
-                            <div class="bytecode-content">
-                                <div id="bytecodeViewer" style="width: 100%; height: 100%;"></div>
+                        <div class="split-divider" id="verticalDivider"></div>
+                        <div class="split-pane">
+                            <div class="bytecode-container">
+                                <div class="bytecode-header"><span>Compiled Bytecode</span></div>
+                                <div class="bytecode-content">
+                                    <div id="bytecodeViewer" style="width: 100%; height: 100%;"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="state-sidebar">
-                    <div class="sidebar-header">Process Information</div>
-                    <div class="state-content" id="stateContent">
-                        <div class="state-section">
-                            <div class="state-section-header">Process</div>
-                            <div class="process-info">
-                                <div class="process-stat">
-                                    <div class="process-stat-label">Counter</div>
-                                    <div class="process-stat-value" id="statCounter">—</div>
-                                </div>
-                                <div class="process-stat">
-                                    <div class="process-stat-label">Call Depth</div>
-                                    <div class="process-stat-value" id="statCallDepth">—</div>
-                                </div>
+
+                <div class="bottom-panel">
+                    <div class="panel-content">
+                        <div class="panel-section active" id="outputTab"></div>
+                    </div>
+                    <div class="panel-header">
+                        <div class="panel-tabs">
+                            <div class="panel-tab active" data-tab="output">OUTPUT</div>
+                        </div>
+                        <button class="toolbar-btn" id="btnClearOutput" title="Clear Output">
+                            <span>✕</span><span>Clear</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="state-sidebar">
+                <div class="sidebar-header">Process Information</div>
+                <div class="state-content" id="stateContent">
+                    <div class="state-section">
+                        <div class="state-section-header">Process</div>
+                        <div class="process-info">
+                            <div class="process-stat">
+                                <div class="process-stat-label">Counter</div>
+                                <div class="process-stat-value" id="statCounter">—</div>
                             </div>
-                            <div class="current-instruction" id="currentInstruction" style="display: none;">
-                                <div class="current-instruction-label">Current Instruction</div>
-                                <div class="current-instruction-code" id="instructionCode">—</div>
+                            <div class="process-stat">
+                                <div class="process-stat-label">Call Depth</div>
+                                <div class="process-stat-value" id="statCallDepth">—</div>
                             </div>
                         </div>
-                        <div class="state-section">
-                            <div class="state-section-header">Stack <span class="state-badge" id="stackCount">0</span>
-                            </div>
-                            <div class="state-list" id="stackList">
-                                <div class="empty-state">No data</div>
-                            </div>
+                        <div class="current-instruction" id="currentInstruction" style="display: none;">
+                            <div class="current-instruction-label">Current Instruction</div>
+                            <div class="current-instruction-code" id="instructionCode">—</div>
                         </div>
-                        <div class="state-section">
-                            <div class="state-section-header">Locals <span class="state-badge" id="localsCount">0</span>
-                            </div>
-                            <div class="state-list" id="localsList">
-                                <div class="empty-state">No data</div>
-                            </div>
+                    </div>
+                    <div class="state-section">
+                        <div class="state-section-header">Stack <span class="state-badge" id="stackCount">0</span></div>
+                        <div class="state-list" id="stackList">
+                            <div class="empty-state">No data</div>
                         </div>
-                        <div class="state-section">
-                            <div class="state-section-header">Active Breakpoints <span class="state-badge"
-                                    id="bpCount">0</span></div>
-                            <div class="breakpoints-list" id="breakpointsList">
-                                <div class="empty-state">No breakpoints set</div>
-                            </div>
+                    </div>
+                    <div class="state-section">
+                        <div class="state-section-header">Locals <span class="state-badge" id="localsCount">0</span>
+                        </div>
+                        <div class="state-list" id="localsList">
+                            <div class="empty-state">No data</div>
+                        </div>
+                    </div>
+                    <div class="state-section">
+                        <div class="state-section-header">Active Breakpoints <span class="state-badge"
+                                id="bpCount">0</span></div>
+                        <div class="breakpoints-list" id="breakpointsList">
+                            <div class="empty-state">No breakpoints set</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="bottom-panel">
-            <div class="panel-header">
-                <div class="panel-tabs">
-                    <div class="panel-tab active" data-tab="output">OUTPUT</div>
-                </div>
-            </div>
-            <div class="panel-content">
-                <div class="panel-section active" id="outputTab"></div>
-            </div>
-        </div>
+
         <div class="status-bar">
             <div class="status-left"><span id="currentFile">Untitled.kj</span></div>
             <div class="status-right"><span id="lineInfo">Line 1, Column 1</span><span
-                    id="connectionInfo">Disconnected</span>
-            </div>
+                    id="connectionInfo">Disconnected</span></div>
         </div>
     </div>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/monaco-editor/0.45.0/min/vs/loader.min.js"></script>
@@ -1086,23 +1116,18 @@
                     hello_world: {
                         name: "helloWorld.kj",
                         badge: null,
-                        code: `-- Hello World in Konjac\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    IO.puts("Hello, Konjac!")\n  end\nend\n`
+                        code: `-- Hello World in Konjac\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Null\n    IO.puts("Hello, Konjac!")\n  end\nend\n`
                     },
                     variables: {
                         name: "variables.kj",
                         badge: null,
-                        code: `-- Variables example\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    name = "Alice"\n    age = 30\n    IO.puts(name)\n    IO.puts(age)\n  end\nend\n`
+                        code: `-- Variables example\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Null\n    name = "Alice"\n    age = 30\n    IO.puts(name)\n    IO.puts(age)\n  end\nend\n`
                     },
                     arithmetic: {
                         name: "arithmetic.kj",
                         badge: null,
-                        code: `-- Arithmetic operations\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    a = 10\n    b = 5\n    sum = a + b\n    IO.puts(sum)\n  end\nend\n`
+                        code: `-- Arithmetic operations\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Null\n    a = 10\n    b = 5\n\n    sum = a + b\n    IO.puts(sum)\n  end\nend\n`
                     },
-                    types: {
-                        name: "typeSystem.kj",
-                        badge: null,
-                        code: `-- Type annotations and inference\nmodule Untitled.Application\n  -- Explicit type annotations\n  function add(x : Int32, y : Int32) : Int32\n    x + y\n  end\n\n  -- Type inference\n  function multiply(x, y)\n    x * y  -- Inferred as Int32 * Int32 -> Int32\n  end\n\n  function main(arguments : Array(String)) : Nil\n    result1 = add(5, 3)  -- 8\n    result2 = multiply(4, 2)  -- 8\n    IO.puts(\`Results: \${result1}, \${result2}\`)\n  end\nend\n`
-                    }
                 }
             },
             control_flow: {
@@ -1112,189 +1137,12 @@
                     if_statement: {
                         name: "ifStatement.kj",
                         badge: null,
-                        code: `-- If statement\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    x = 25\n\n    if x > 20 do\n      IO.puts("Greater than 20")\n    else\n      IO.puts("20 or less")\n    end\n  end\nend\n`
-                    },
-                    cond_statement: {
-                        name: "conditionalExpression.kj",
-                        badge: "new",
-                        code: `-- Cond statement for multiple conditions\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    score = 85\n    grade = cond do\n      score >= 90 -> "A"\n      score >= 80 -> "B"\n      score >= 70 -> "C"\n      score >= 60 -> "D"\n      true -> "F"\n    end\n    IO.puts(\`Grade: \${grade}\`)\n  end\nend\n`
-                    },
-                    while_loop: {
-                        name: "whileLoop.kj",
-                        badge: null,
-                        code: `-- While loop with accumulator\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    count = 0\n    total = 0\n\n    while count < 5 do\n      total = total + count\n      count = count + 1\n    end\n\n    IO.puts(\`Total: \${total}\`)\n  end\nend\n`
-                    },
-                    for_comprehension: {
-                        name: "forComprehension.kj",
-                        badge: null,
-                        code: `-- For comprehension with generator\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    -- Generator syntax\n    squares = for x in 1..5 do\n      x * x\n    end\n    IO.puts(squares)  -- [1, 4, 9, 16, 25]\n\n    -- With filter\n    even_squares = for x in 1..10, x % 2 == 0 do\n      x * x\n    end\n    IO.puts(even_squares)  -- [4, 16, 36, 64, 100]\n  end\nend\n`
-                    }
-                }
-            },
-            pattern_matching: {
-                name: "Pattern Matching",
-                icon: "pattern",
-                files: {
-                    string_patterns: {
-                        name: "stringPatterns.kj",
-                        badge: null,
-                        code: `-- Pattern matching with Strings\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    string = "HTTP/1.1"\n    <<"HTTP/", version/3>> = string\n    IO.puts(\`HTTP version: \${version}\`)\n  end\nend\n`
-                    },
-                    tuple_patterns: {
-                        name: "tuplePatterns.kj",
-                        badge: null,
-                        code: `-- Pattern matching with Tuples\nmodule Untitled.Application\n  function get_status() : {Int32, String}\n    {200, "OK"}\n  end\n\n  function main(arguments : Array(String)) : Nil\n    {code, message} = get_status()\n    IO.puts(\`Status: \${code} \${message}\`)\n  end\nend\n`
-                    },
-                    struct_patterns: {
-                        name: "structPatterns.kj",
-                        badge: null,
-                        code: `-- Pattern matching with Structs\nmodule Untitled.Application\n  struct Point\n    x : Int32\n    y : Int32\n  end\n\n  function main(arguments : Array(String)) : Nil\n    point = Point{x: 10, y: 20}\n    Point{x: x_coord, y: y_coord} = point\n    IO.puts(\`Coordinates: (\${x_coord}, \${y_coord})\`)\n  end\nend\n`
-                    },
-                    guard_clauses: {
-                        name: "patternGuards.kj",
-                        badge: "advanced",
-                        code: `-- Pattern matching with guard clauses\nmodule Untitled.Application\n  function categorize(value) : String\n    case value do\n      x when is_number(x) and x > 0 -> "positive number"\n      x when is_number(x) and x < 0 -> "negative number"\n      x when is_string(x) -> "string: " + x\n      _ -> "unknown"\n    end\n  end\n\n  function main(arguments : Array(String)) : Nil\n    IO.puts(categorize(42))    -- "positive number"\n    IO.puts(categorize(-5))    -- "negative number"\n    IO.puts(categorize("hello")) -- "string: hello"\n  end\nend\n`
-                    }
-                }
-            },
-            functions: {
-                name: "Functions",
-                icon: "function",
-                files: {
-                    named_functions: {
-                        name: "namedFunctions.kj",
-                        badge: null,
-                        code: `-- Function definitions and calls\nmodule Untitled.Application\n  -- Public function (exported)\n  export function greet(name : String) : String\n    "Hello, " + name + "!"\n  end\n\n  -- Private function\n  function private_helper(x : Int32) : Int32\n    x * 2\n  end\n\n  -- Function with default arguments\n  function power(base : Int32, exponent : Int32 = 2) : Int32\n    base ** exponent\n  end\n\n  function main(arguments : Array(String)) : Nil\n    IO.puts(greet("World"))\n    IO.puts(power(3))      -- 9 (uses default exponent)\n    IO.puts(power(3, 3))   -- 27\n  end\nend\n`
-                    },
-                    anonymous_functions: {
-                        name: "anonymousFunctions.kj",
-                        badge: null,
-                        code: `-- Lambda functions and higher-order functions\nmodule Untitled.Application\n  function apply_twice(f : Function(Int32 -> Int32), x : Int32) : Int32\n    f(f(x))\n  end\n\n  function main(arguments : Array(String)) : Nil\n    -- Lambda syntax variations\n    square = fn(x : Int32) -> x * x end\n    cube = function(x : Int32) do\n      x * x * x\n    end\n\n    -- Partial application\n    add = function(x : Int32, y : Int32) do\n      x + y\n    end\n    add_five = fn(y) -> add(5, y) end\n\n    IO.puts(square(4))      -- 16\n    IO.puts(apply_twice(square, 2))  -- 16\n    IO.puts(add_five(10))   -- 15\n  end\nend\n`
-                    },
-                    recursion: {
-                        name: "recursion.kj",
-                        badge: null,
-                        code: `-- Recursive functions with tail-call optimization\nmodule Untitled.Application\n  -- Regular recursion\n  function factorial(n : Int32) : Int32\n    if n <= 1 do\n      1\n    else\n      n * factorial(n - 1)\n    end\n  end\n\n  -- Tail-recursive version\n  function factorial_tail(n : Int32, acc : Int32 = 1) : Int32\n    if n <= 1 do\n      acc\n    else\n      factorial_tail(n - 1, acc * n)\n    end\n  end\n\n  -- Mutual recursion\n  function is_even(n : Int32) : Bool\n    if n == 0 do\n      true\n    else\n      is_odd(n - 1)\n    end\n  end\n\n  function is_odd(n : Int32) : Bool\n    if n == 0 do\n      false\n    else\n      is_even(n - 1)\n    end\n  end\n\n  function main(arguments : Array(String)) : Nil\n    IO.puts(factorial(5))      -- 120\n    IO.puts(factorial_tail(5)) -- 120\n    IO.puts(is_even(4))        -- true\n    IO.puts(is_odd(4))         -- false\n  end\nend\n`
-                    },
-                    pipelines: {
-                        name: "pipelineOperator.kj",
-                        badge: "favorite",
-                        code: `-- Pipe operator for function composition\nmodule Untitled.Application\n  function double(x : Int32) : Int32, do: x * 2\n  function add_one(x : Int32) : Int32, do: x + 1\n  function square(x : Int32) : Int32, do: x * x\n\n  function main(arguments : Array(String)) : Nil\n    -- Traditional nested calls\n    result1 = square(add_one(double(3)))  -- ((3*2)+1)^2 = 49\n\n    -- Pipeline version (left to right)\n    result2 = 3\n      |> double\n      |> add_one\n      |> square\n\n    -- Pipeline with anonymous functions\n    result3 = [1, 2, 3, 4, 5]\n      |> List.map(fn(x) -> x * 2 end)\n      |> List.filter(fn(x) -> x > 5 end)\n      |> List.reduce(fn(acc, x) -> acc + x end, 0)\n\n    IO.puts(\`Results: \${result1}, \${result2}, \${result3}\`)\n  end\nend\n`
-                    }
-                }
-            },
-            data_structures: {
-                name: "Data Structures",
-                icon: "data",
-                files: {
-                    lists: {
-                        name: "lists.kj",
-                        badge: null,
-                        code: `-- List operations and comprehensions\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    -- List creation\n    numbers = [1, 2, 3, 4, 5]\n    evens = [2, 4, 6, 8, 10]\n\n    -- List operations\n    combined = numbers ++ evens  -- Concatenation\n    doubled = List.map(numbers, fn(x) -> x * 2 end)\n    sum = List.reduce(numbers, fn(acc, x) -> acc + x end, 0)\n\n    -- List pattern matching\n    [first, second | rest] = numbers\n    IO.puts(\`First: \${first}, Second: \${second}\`)\n    IO.puts(\`Rest: \${rest}\`)\n\n    -- List comprehensions\n    squares = for x in numbers do\n      x * x\n    end\n  end\nend\n`
-                    },
-                    maps: {
-                        name: "mapsAndDictionaries.kj",
-                        badge: null,
-                        code: `-- Map operations and pattern matching\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    -- Map creation\n    person = %{\n      name: "Alice",\n      age: 30,\n      city: "New York"\n    }\n\n    -- Access and update\n    name = person[:name]\n    updated = Map.put(person, :age, 31)\n\n    -- Map pattern matching\n    %{name: person_name, age: person_age} = person\n    IO.puts(\`\${person_name} is \${person_age} years old\`)\n\n    -- Nested maps\n    company = %{\n      name: "Tech Corp",\n      employees: %{\n        count: 100,\n        departments: ["Engineering", "Sales"]\n      }\n    }\n  end\nend\n`
-                    },
-                    tuples: {
-                        name: "tuples.kj",
-                        badge: null,
-                        code: `-- Fixed-size tuple operations\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    -- Tuple creation\n    point = {10, 20}\n    person = {"Alice", 30, "Engineer"}\n\n    -- Access elements (0-indexed)\n    x = elem(point, 0)  -- 10\n    y = elem(point, 1)  -- 20\n\n    -- Update tuple (creates new tuple)\n    new_point = put_elem(point, 1, 30)  -- {10, 30}\n\n    -- Pattern matching with tuples\n    {name, age, _} = person\n    IO.puts(\`\${name} is \${age} years old\`)\n\n    -- Return multiple values\n    function min_max(list) : {Int32, Int32}\n      min = List.min(list)\n      max = List.max(list)\n      {min, max}\n    end\n  end\nend\n`
-                    },
-                    sets: {
-                        name: "sets.kj",
-                        badge: null,
-                        code: `-- Set operations\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Nil\n    -- Set creation\n    set1 = Set.new([1, 2, 3, 4, 5])\n    set2 = Set.new([4, 5, 6, 7, 8])\n\n    -- Set operations\n    union = Set.union(set1, set2)\n    intersection = Set.intersection(set1, set2)\n    difference = Set.difference(set1, set2)\n\n    -- Membership test\n    has_three = Set.member?(set1, 3)  -- true\n    has_nine = Set.member?(set1, 9)   -- false\n\n    IO.puts(\`Union: \${Set.to_list(union)}\`)\n    IO.puts(\`Intersection: \${Set.to_list(intersection)}\`)\n  end\nend\n`
-                    }
-                }
-            },
-            types: {
-                name: "Type System",
-                icon: "type",
-                files: {
-                    custom_types: {
-                        name: "customTypes.kj",
-                        badge: null,
-                        code: `-- Defining custom types with structs and enums\nmodule Untitled.Application\n  -- Simple struct\n  struct Point\n    x : Float64\n    y : Float64\n  end\n\n  -- Enum type\n  enum Color\n    Red\n    Green\n    Blue\n    Rgb(Int32, Int32, Int32)  -- Variant with data\n    Hex(String)\n  end\n\n  -- Union type\n  type Result = Ok(String) | Error(String)\n\n  function main(arguments : Array(String)) : Nil\n    point = Point{x: 1.5, y: 2.5}\n    color = Color::Rgb(255, 0, 0)\n    result = Ok("Success!")\n\n    -- Pattern matching on custom types\n    case color do\n      Color::Red -> IO.puts("Red")\n      Color::Rgb(r, g, b) -> IO.puts(\`RGB(\${r}, \${g}, \${b})\`)\n      _ -> IO.puts("Other color")\n    end\n  end\nend\n`
-                    },
-                    type_aliases: {
-                        name: "typeAliases.kj",
-                        badge: null,
-                        code: `-- Type aliases for better readability\nmodule Untitled.Application\n  -- Type aliases\n  type UserId = Int32\n  type Email = String\n  type Age = Int32\n  type Username = String\n\n  -- Record type (named tuple)\n  type User = {\n    id: UserId,\n    email: Email,\n    age: Age,\n    username: Username\n  }\n\n  -- Function type alias\n  type Comparator = Function(Int32, Int32 -> Bool)\n\n  function create_user(id : UserId, email : Email) : User\n    {\n      id: id,\n      email: email,\n      age: 0,  -- default\n      username: "user_" + to_string(id)\n    }\n  end\n\n  function main(arguments : Array(String)) : Nil\n    user = create_user(123, "alice@example.com")\n    IO.puts(\`User: \${user[:username]}\`)\n  end\nend\n`
-                    },
-                    generics: {
-                        name: "genericTypes.kj",
-                        badge: "advanced",
-                        code: `-- Generic types and functions\nmodule Untitled.Application\n  -- Generic struct\n  struct Box(T)\n    value : T\n  end\n\n  -- Generic function\n  function swap(a : T, b : T) : {T, T} forall T\n    {b, a}\n  end\n\n  -- Constrained generic\n  function compare(a : T, b : T) : Bool forall T where T: Comparable\n    a < b\n  end\n\n  -- Generic enum\n  enum Maybe(T)\n    Just(T)\n    Nothing\n  end\n\n  function main(arguments : Array(String)) : Nil\n    int_box = Box(Int32){value: 42}\n    str_box = Box(String){value: "hello"}\n\n    {x, y} = swap(10, 20)\n    IO.puts(\`Swapped: \${x}, \${y}\`)\n\n    result = Maybe::Just("Success")\n    case result do\n      Maybe::Just(value) -> IO.puts(value)\n      Maybe::Nothing -> IO.puts("No value")\n    end\n  end\nend\n`
-                    },
-                    protocols: {
-                        name: "protocols.kj",
-                        badge: "advanced",
-                        code: `-- Protocol-based polymorphism\nmodule Untitled.Application\n  -- Define a protocol\n  protocol Printable\n    function to_string(self : T) : String\n  end\n\n  -- Implement for Int32\n  impl Printable for Int32\n    function to_string(self : Int32) : String\n      "Int32: " + integer_to_string(self)\n    end\n  end\n\n  -- Implement for custom type\n  struct Person\n    name : String\n    age : Int32\n  end\n\n  impl Printable for Person\n    function to_string(self : Person) : String\n      \`Person{\${self.name}, \${self.age}}\`\n    end\n  end\n\n  -- Function using the protocol\n  function print_all(printables : Array(Printable)) : Nil\n    List.each(printables, fn(item) ->\n      IO.puts(Printable.to_string(item))\n    end)\n  end\n\n  function main(arguments : Array(String)) : Nil\n    items = [42, Person{name: "Alice", age: 30}]\n    print_all(items)\n  end\nend\n`
-                    }
-                }
-            },
-            concurrency: {
-                name: "Concurrency",
-                icon: "concurrent",
-                files: {
-                    processes: {
-                        name: "processes.kj",
-                        badge: null,
-                        code: `-- Lightweight processes (actors)\nmodule Untitled.Application\n  -- Define a process\n  process Counter\n    state count : Int32 = 0\n\n    -- Handle increment message\n    function handle(:increment) : Nil\n      count = count + 1\n      IO.puts(\`Count: \${count}\`)\n    end\n\n    -- Handle get message with reply\n    function handle(:get, from : Pid) : Nil\n      send(from, {:count, count})\n    end\n  end\n\n  function main(arguments : Array(String)) : Nil\n    -- Spawn a counter process\n    counter = spawn(Counter)\n\n    -- Send messages\n    send(counter, :increment)\n    send(counter, :increment)\n    send(counter, :increment)\n\n    -- Request current count\n    send(counter, {:get, self()})\n\n    -- Receive reply\n    receive do\n      {:count, value} -> IO.puts(\`Received count: \${value}\`)\n      after 1000 -> IO.puts("Timeout")\n    end\n  end\nend\n`
-                    },
-                    tasks: {
-                        name: "asyncTasks.kj",
-                        badge: null,
-                        code: `-- Asynchronous task execution\nmodule Untitled.Application\n  function slow_computation(name : String) : String\n    -- Simulate slow work\n    Process.sleep(1000)\n    \`Result from \${name}\`\n  end\n\n  function main(arguments : Array(String)) : Nil\n    -- Start tasks concurrently\n    task1 = Task.async(fn() -> slow_computation("Task 1") end)\n    task2 = Task.async(fn() -> slow_computation("Task 2") end)\n    task3 = Task.async(fn() -> slow_computation("Task 3") end)\n\n    -- Wait for all tasks\n    results = Task.await_all([task1, task2, task3])\n\n    -- Process results\n    List.each(results, fn(result) ->\n      IO.puts(result)\n    end)\n  end\nend\n`
-                    },
-                    channels: {
-                        name: "channels.kj",
-                        badge: "new",
-                        code: `-- Channel-based communication\nmodule Untitled.Application\n  function producer(channel : Channel(Int32), count : Int32) : Nil\n    for i in 1..count do\n      Channel.send(channel, i)\n      Process.sleep(100)  -- Simulate work\n    end\n    Channel.close(channel)\n  end\n\n  function consumer(channel : Channel(Int32)) : Nil\n    receive do\n      value when is_integer(value) ->\n        IO.puts(\`Received: \${value}\`)\n        consumer(channel)  -- Continue receiving\n      :closed ->\n        IO.puts("Channel closed")\n    end\n  end\n\n  function main(arguments : Array(String)) : Nil\n    channel = Channel.new(Int32)\n\n    -- Start producer and consumer\n    Task.async(fn() -> producer(channel, 5) end)\n    Task.async(fn() -> consumer(channel) end)\n\n    Process.sleep(2000)  -- Wait for completion\n  end\nend\n`
-                    },
-                    supervisors: {
-                        name: "supervisors.kj",
-                        badge: "advanced",
-                        code: `-- Process supervision\nmodule Untitled.Application\n  process Worker\n    state restart_count : Int32 = 0\n\n    function init() : Nil\n      IO.puts("Worker started")\n    end\n\n    function handle(:crash) : Nil\n      if restart_count < 3 do\n        restart_count = restart_count + 1\n        raise "Intentional crash"\n      else\n        IO.puts("Maximum restarts reached")\n      end\n    end\n  end\n\n  -- Supervisor strategy\n  supervisor MySupervisor\n    strategy: :one_for_one,\n    max_restarts: 3,\n    max_seconds: 5\n\n    children: [\n      worker(Worker, [])  -- Supervise Worker process\n    ]\n  end\n\n  function main(arguments : Array(String)) : Nil\n    -- Start supervised system\n    supervisor = Supervisor.start(MySupervisor)\n\n    -- Get worker pid\n    [worker_pid] = Supervisor.children(supervisor)\n\n    -- Send crash messages\n    send(worker_pid, :crash)\n    Process.sleep(1000)\n  end\nend\n`
-                    }
-                }
-            },
-            metaprogramming: {
-                name: "Metaprogramming",
-                icon: "meta",
-                files: {
-                    macros: {
-                        name: "macros.kj",
-                        badge: "advanced",
-                        code: `-- Compile-time metaprogramming with macros\nmodule Untitled.Application\n  -- Define a macro\n  macro unless(condition, do: block) : AST\n    quote do\n      if not unquote(condition) do\n        unquote(block)\n      end\n    end\n  end\n\n  -- Macro that generates functions\n  macro defproperty(name, type) : AST\n    quote do\n      function unquote(name)(self : T) : unquote(type) forall T\n        Map.get(self, unquote(name))\n      end\n\n      function unquote(name <> "!")(self : T, value : unquote(type)) : T forall T\n        Map.put(self, unquote(name), value)\n      end\n    end\n  end\n\n  function main(arguments : Array(String)) : Nil\n    -- Use the unless macro\n    x = 10\n    unless x > 20 do\n      IO.puts("x is not greater than 20")\n    end\n\n    -- Properties will be generated at compile time\n    defproperty(:name, String)\n    defproperty(:age, Int32)\n  end\nend\n`
-                    },
-                    compile_time: {
-                        name: "compileTimeCode.kj",
-                        badge: "expert",
-                        code: `-- Advanced compile-time operations\nmodule Untitled.Application\n  -- Compile-time function execution\n  @compile_time\n  function generate_constants() : Array({String, Int32})\n    [\n      {"MAX_SIZE", 1024},\n      {"TIMEOUT", 5000},\n      {"RETRY_COUNT", 3}\n    ]\n  end\n\n  -- Generate constants at compile time\n  for {name, value} in generate_constants() do\n    @constant name value\n  end\n\n  -- Type checking at compile time\n  @compile_time\n  function validate_config(config : Map) : Bool\n    required_keys = ["host", "port", "timeout"]\n    List.all?(required_keys, fn(key) -> Map.has_key?(config, key) end)\n  end\n\n  -- Configuration checked at compile time\n  @config %{\n    host: "localhost",\n    port: 8080,\n    timeout: 5000\n  }\n\n  @compile_time\n  if not validate_config(@config) do\n    raise "Invalid configuration"\n  end\n\n  function main(arguments : Array(String)) : Nil\n    IO.puts(\`Using port: \${@config[:port]}\`)\n    IO.puts(\`Max size: \${@MAX_SIZE}\`)\n  end\nend\n`
-                    }
-                }
-            },
-            interoperability: {
-                name: "Interoperability",
-                icon: "interop",
-                files: {
-                    foreign_function: {
-                        name: "Foreign Function Interface",
-                        badge: null,
-                        code: `-- Calling external C functions\nmodule Untitled.Application\n  -- Declare external C function\n  @extern "libc"\n  function getpid() : Int32\n\n  @extern "mylib"\n  function process_data(data : Pointer(UInt8), length : Int32) : Int32\n\n  function main(arguments : Array(String)) : Nil\n    -- Call C function\n    pid = getpid()\n    IO.puts(\`Process ID: \${pid}\`)\n\n    -- Pass data to C\n    data = "Hello from Konjac"\n    result = process_data(to_cstring(data), length(data))\n    IO.puts(\`Result: \${result}\`)\n  end\nend\n`
-                    },
-                    javascript_interop: {
-                        name: "JavaScript Interop",
-                        badge: null,
-                        code: `-- JavaScript interoperability in browser\nmodule Untitled.Application\n  @extern "window"\n  function alert(message : String) : Nil\n\n  @extern "document"\n  function getElementById(id : String) : JsObject\n\n  @extern "console"\n  function log(message : String) : Nil\n\n  -- JavaScript object manipulation\n  function set_text(element : JsObject, text : String) : Nil\n    Js.set_property(element, "textContent", text)\n  end\n\n  function main(arguments : Array(String)) : Nil\n    -- Call JavaScript functions\n    log("Hello from Konjac")\n    alert("Welcome!")\n\n    -- Manipulate DOM\n    element = getElementById("my-element")\n    set_text(element, "Updated by Konjac")\n  end\nend\n`
+                        code: `-- If statement\nmodule Untitled.Application\n  function main(arguments : Array(String)) : Null\n    x = 25\n\n    if x > 20 do\n      IO.puts("Greater than 20")\n    else\n      IO.puts("20 or less")\n    end\n  end\nend\n`
                     }
                 }
             }
         };
-        
+
         class KonjacCompiler {
             constructor() {
                 this.reset();
@@ -1303,9 +1151,13 @@
             reset() {
                 this.output = [];
                 this.errors = [];
+                this.warnings = [];
                 this.localVariables = new Map();
                 this.nextLocalId = 0;
                 this.functions = new Map();
+                this.functionAddresses = new Map();
+                this.currentFunction = null;
+                this.loopStack = [];
             }
 
             compile(source) {
@@ -1313,33 +1165,42 @@
                 try {
                     const tokens = this.tokenize(source);
                     const ast = this.parse(tokens);
-                    if (this.errors.length) return { success: false, errors: this.errors };
+                    if (this.errors.length) return { success: false, errors: this.errors, warnings: this.warnings };
 
                     this.generateBytecode(ast);
-                    if (this.errors.length) return { success: false, errors: this.errors };
+                    if (this.errors.length) return { success: false, errors: this.errors, warnings: this.warnings };
 
                     return {
                         success: true,
                         bytecode: this.output,
-                        instructions: this.output.length
+                        instructions: this.output.length,
+                        functions: this.functionAddresses,
+                        warnings: this.warnings
                     };
                 } catch (e) {
                     this.errors.push({ line: 1, message: e.message });
-                    return { success: false, errors: this.errors };
+                    return { success: false, errors: this.errors, warnings: this.warnings };
                 }
             }
 
             generateBytecode(ast) {
-                for (const mod of ast.modules)
-                    for (const fn of mod.functions)
+                for (const mod of ast.modules) {
+                    for (const fn of mod.functions) {
                         this.functions.set(fn.name, fn);
+                    }
+                }
 
                 if (!this.functions.has("main")) {
-                    this.errors.push({ line: 1, message: "No main function found" });
+                    this.errors.push({ line: 1, message: "No module with a main function has been found" });
                     return;
                 }
 
                 for (const fn of this.functions.values()) {
+                    this.functionAddresses.set(fn.name, {
+                        address: this.output.length,
+                        params: fn.params,
+                        returnType: fn.returnType
+                    });
                     this.compileFunction(fn);
                     this.emit("EXIT_SELF");
                 }
@@ -1348,170 +1209,277 @@
             compileFunction(fn) {
                 this.localVariables.clear();
                 this.nextLocalId = 0;
+                this.currentFunction = fn.name;
 
-                for (const p of fn.params)
+                for (const p of fn.params) {
                     this.localVariables.set(p.name, this.nextLocalId++);
+                }
 
-                for (const stmt of fn.body)
-                    this.compileStatement(stmt);
+                for (const statement of fn.body) {
+                    this.compileStatement(statement);
+                }
 
                 this.emit("PUSH_SYMBOL", { type: "symbol", value: "normal" });
             }
 
-            compileStatement(stmt) {
-                if (!stmt) return;
+            compileStatement(statement) {
+                if (!statement) return;
 
-                switch (stmt.type) {
+                switch (statement.type) {
                     case "io_puts":
-                        this.compileExpression(stmt.value);
+                        this.compileExpression(statement.value);
                         this.emit("PRINT_LINE");
                         break;
 
+                    case "process_send":
+                        this.compileExpression(statement.value[0]);
+                        this.compileExpression(statement.value[1]);
+                        this.emit("SEND");
+                        break;
+
+                    case "process_send_after":
+                        this.compileExpression(statement.value[0]);
+                        this.compileExpression(statement.value[1]);
+                        this.compileExpression(statement.value[2]);
+                        this.emit("SEND_AFTER");
+                        break;
+
                     case "assignment":
-                        this.compileExpression(stmt.value);
-                        if (!this.localVariables.has(stmt.variable))
-                            this.localVariables.set(stmt.variable, this.nextLocalId++);
+                        this.compileExpression(statement.value);
+                        if (!this.localVariables.has(statement.variable)) {
+                            this.localVariables.set(statement.variable, this.nextLocalId++);
+                        }
                         this.emit("STORE_LOCAL", {
                             type: "unsignedInteger",
-                            value: this.localVariables.get(stmt.variable)
+                            value: this.localVariables.get(statement.variable)
                         });
                         break;
 
                     case "return":
-                        this.compileExpression(stmt.value);
+                        this.compileExpression(statement.value);
                         this.emit("RETURN");
                         break;
 
                     case "if":
-                        this.compileIf(stmt);
+                        this.compileIf(statement);
+                        break;
+
+                    case "while":
+                        this.compileWhile(statement);
                         break;
 
                     case "function_call":
-                        this.compileFunctionCall(stmt);
+                        this.compileFunctionCall(statement);
                         break;
 
                     case "expression":
-                        this.compileExpression(stmt.value);
+                        this.compileExpression(statement.value);
+                        this.emit("POP");
+                        break;
+
+                    case "break":
+                        if (this.loopStack.length === 0) {
+                            this.errors.push({ line: statement.line, message: "Break outside of loop" });
+                        } else {
+                            const jumpIdx = this.output.length;
+                            this.emit("JUMP", { type: "integer", value: 0 });
+                            this.loopStack[this.loopStack.length - 1].breaks.push(jumpIdx);
+                        }
+                        break;
+
+                    case "continue":
+                        if (this.loopStack.length === 0) {
+                            this.errors.push({ line: statement.line, message: "Continue outside of loop" });
+                        } else {
+                            const jumpIdx = this.output.length;
+                            this.emit("JUMP", { type: "integer", value: 0 });
+                            this.loopStack[this.loopStack.length - 1].continues.push(jumpIdx);
+                        }
                         break;
                 }
             }
 
-            compileIf(stmt) {
-                this.compileExpression(stmt.condition);
+            compileIf(statement) {
+                this.compileExpression(statement.condition);
                 const jumpElse = this.output.length;
                 this.emit("JUMP_UNLESS", { type: "integer", value: 0 });
 
-                for (const s of stmt.thenBody)
+                for (const s of statement.thenBody) {
                     this.compileStatement(s);
+                }
 
-                if (stmt.elseBody.length) {
+                if (statement.elseBody && statement.elseBody.length) {
                     const jumpEnd = this.output.length;
                     this.emit("JUMP", { type: "integer", value: 0 });
+                    this.output[jumpElse].value.value = this.output.length - jumpElse - 1;
 
-                    this.output[jumpElse].value.value =
-                        this.output.length - jumpElse - 1;
-
-                    for (const s of stmt.elseBody)
+                    for (const s of statement.elseBody) {
                         this.compileStatement(s);
-
-                    this.output[jumpEnd].value.value =
-                        this.output.length - jumpEnd - 1;
+                    }
+                    this.output[jumpEnd].value.value = this.output.length - jumpEnd - 1;
                 } else {
-                    this.output[jumpElse].value.value =
-                        this.output.length - jumpElse - 1;
+                    this.output[jumpElse].value.value = this.output.length - jumpElse - 1;
                 }
             }
 
-            compileFunctionCall(stmt) {
-                for (const arg of stmt.args)
-                    this.compileExpression(arg);
+            compileWhile(statement) {
+                const loopStart = this.output.length;
+                const loopInfo = { breaks: [], continues: [], start: loopStart };
+                this.loopStack.push(loopInfo);
 
-                if (!this.functions.has(stmt.name)) {
-                    this.errors.push({
-                        line: stmt.line,
-                        message: `Unknown function ${stmt.name}`
+                this.compileExpression(statement.condition);
+                const jumpEnd = this.output.length;
+                this.emit("JUMP_UNLESS", { type: "integer", value: 0 });
+
+                for (const s of statement.body) {
+                    this.compileStatement(s);
+                }
+
+                this.emit("JUMP", { type: "integer", value: loopStart - this.output.length - 1 });
+                this.output[jumpEnd].value.value = this.output.length - jumpEnd - 1;
+
+                for (const breakIdx of loopInfo.breaks) {
+                    this.output[breakIdx].value.value = this.output.length - breakIdx - 1;
+                }
+                for (const continueIdx of loopInfo.continues) {
+                    this.output[continueIdx].value.value = loopStart - continueIdx - 1;
+                }
+
+                this.loopStack.pop();
+            }
+
+            compileFunctionCall(statement) {
+                for (const arg of statement.args) {
+                    this.compileExpression(arg);
+                }
+
+                if (!this.functions.has(statement.name)) {
+                    this.warnings.push({
+                        line: statement.line,
+                        message: `Function '${statement.name}' not found, assuming binding`
                     });
-                    return;
                 }
 
                 this.emit("CALL", {
                     type: "call",
-                    name: stmt.name,
-                    argc: stmt.args.length
+                    name: statement.name,
+                    argc: statement.args.length
                 });
+
+                this.emit("POP");
             }
 
-            compileExpression(expr) {
-                if (!expr) {
-                    this.emit("PUSH_SYMBOL", { type: "symbol", value: "nil" });
+            compileExpression(expression) {
+                if (!expression) {
+                    this.emit("PUSH_NULL");
                     return;
                 }
 
-                switch (expr.type) {
+                switch (expression.type) {
+                    case "process_self":
+                        this.emit("SELF");
+                        break;
+
+                    case "process_receive":
+                        this.emit("RECEIVE");
+                        break;
+
+                    case "process_spawn":
+                        this.emit("SPAWN");
+                        break;
+
+                    case "process_kill":
+                        this.compileExpression(expression.target);
+                        this.emit("KILL");
+                        break;
+
                     case "integer":
-                        this.emit("PUSH_INTEGER", { type: "integer", value: expr.value });
+                        this.emit("PUSH_INTEGER", { type: "integer", value: expression.value });
                         break;
 
                     case "float":
-                        this.emit("PUSH_FLOAT", { type: "float", value: expr.value });
+                        this.emit("PUSH_FLOAT", { type: "float", value: expression.value });
                         break;
 
                     case "string":
-                        this.emit("PUSH_STRING", { type: "string", value: expr.value });
+                        this.emit("PUSH_STRING", { type: "string", value: expression.value });
                         break;
 
                     case "boolean":
-                        this.emit("PUSH_INTEGER", {
-                            type: "integer",
-                            value: expr.value ? 1 : 0
-                        });
+                        this.emit("PUSH_BOOLEAN", { type: "boolean", value: expression.value });
                         break;
 
-                    case "nil":
-                        this.emit("PUSH_SYMBOL", { type: "symbol", value: "nil" });
+                    case "null":
+                        this.emit("PUSH_NULL");
+                        break;
+
+                    case "symbol":
+                        this.emit("PUSH_SYMBOL", { type: "symbol", value: expression.value });
+                        break;
+
+                    case "array":
+                        this.emit("ARRAY_NEW", { type: "integer", value: 0 });
+                        for (const elem of expression.elements) {
+                            this.compileExpression(elem);
+                            this.emit("ARRAY_PUSH");
+                        }
+                        break;
+
+                    case "map":
+                        this.emit("MAP_NEW");
+                        for (const [key, value] of expression.entries) {
+                            this.compileExpression(key);
+                            this.compileExpression(value);
+                            this.emit("MAP_SET");
+                        }
                         break;
 
                     case "identifier":
-                        if (this.localVariables.has(expr.name))
+                        if (this.localVariables.has(expression.name)) {
                             this.emit("LOAD_LOCAL", {
                                 type: "unsignedInteger",
-                                value: this.localVariables.get(expr.name)
+                                value: this.localVariables.get(expression.name)
                             });
-                        else
-                            this.emit("PUSH_STRING", {
-                                type: "string",
-                                value: expr.name
-                            });
+                        } else {
+                            this.emit("LOAD_GLOBAL", { type: "string", value: expression.name });
+                        }
                         break;
 
                     case "binary":
-                        this.compileExpression(expr.left);
-                        this.compileExpression(expr.right);
+                        this.compileExpression(expression.left);
+                        this.compileExpression(expression.right);
                         const ops = {
-                            "+": "ADD",
-                            "-": "SUBTRACT",
-                            "*": "MULTIPLY",
-                            "/": "DIVIDE",
-                            "%": "MODULO",
-                            "==": "EQUAL",
-                            "!=": "NOT_EQUAL",
-                            "<": "LESS_THAN",
-                            ">": "GREATER_THAN",
-                            "<=": "LESS_THAN_OR_EQUAL",
-                            ">=": "GREATER_THAN_OR_EQUAL"
+                            "+": "ADD", "-": "SUBTRACT", "*": "MULTIPLY", "/": "DIVIDE", "%": "MODULO",
+                            "==": "EQUAL", "!=": "NOT_EQUAL", "<": "LESS_THAN", ">": "GREATER_THAN",
+                            "<=": "LESS_THAN_OR_EQUAL", ">=": "GREATER_THAN_OR_EQUAL",
+                            "and": "AND", "or": "OR"
                         };
-                        this.emit(ops[expr.op]);
+                        if (ops[expression.op]) {
+                            this.emit(ops[expression.op]);
+                        }
+                        break;
+
+                    case "unary":
+                        this.compileExpression(expression.operand);
+                        if (expression.op === "-") this.emit("NEGATE");
+                        else if (expression.op === "!" || expression.op === "not") this.emit("NOT");
                         break;
 
                     case "call":
-                        for (const arg of expr.args)
+                        for (const arg of expression.args) {
                             this.compileExpression(arg);
-                        this.emit("CALL", {
-                            type: "call",
-                            name: expr.name,
-                            argc: expr.args.length
-                        });
+                        }
+                        this.emit("CALL", { type: "call", name: expression.name, argc: expression.args.length });
                         break;
+
+                    case "index":
+                        this.compileExpression(expression.object);
+                        this.compileExpression(expression.index);
+                        this.emit("ARRAY_GET");
+                        break;
+
+                    default:
+                        this.emit("PUSH_NULL");
                 }
             }
 
@@ -1524,164 +1492,148 @@
             tokenize(source) {
                 const tokens = [];
                 const lines = source.split('\n');
+
                 for (let ln = 0; ln < lines.length; ln++) {
                     const line = lines[ln];
                     let col = 0;
+
                     while (col < line.length) {
-                        if (/\s/.test(line[col])) {
-                            col++;
-                            continue;
-                        }
+                        if (/\s/.test(line[col])) { col++; continue; }
                         if (line.substring(col, col + 2) === '--') break;
+
                         if (line[col] === '"') {
                             let str = '';
                             col++;
                             while (col < line.length && line[col] !== '"') {
                                 if (line[col] === '\\' && col + 1 < line.length) {
                                     col++;
-                                    str += line[col] === 'n' ? '\n' : line[col] === 't' ? '\t' : line[col];
-                                } else str += line[col];
+                                    const escapes = { 'n': '\n', 't': '\t', 'r': '\r', '\\': '\\', '"': '"' };
+                                    str += escapes[line[col]] || line[col];
+                                } else {
+                                    str += line[col];
+                                }
                                 col++;
                             }
                             col++;
-                            tokens.push({
-                                type: 'STRING',
-                                value: str,
-                                line: ln + 1
-                            });
+                            tokens.push({ type: 'STRING', value: str, line: ln + 1 });
                             continue;
                         }
-                        if (/\d/.test(line[col]) || (line[col] === '-' && /\d/.test(line[col + 1]))) {
-                            let num = '';
-                            if (line[col] === '-') {
-                                num += '-';
+
+                        if (line[col] === ':' && /[a-zA-Z_]/.test(line[col + 1])) {
+                            col++;
+                            let sym = '';
+                            while (col < line.length && /[\w]/.test(line[col])) {
+                                sym += line[col];
                                 col++;
                             }
+                            tokens.push({ type: 'SYMBOL', value: sym, line: ln + 1 });
+                            continue;
+                        }
+
+                        if (/\d/.test(line[col]) || (line[col] === '-' && /\d/.test(line[col + 1]))) {
+                            let num = '';
+                            if (line[col] === '-') { num += '-'; col++; }
                             while (col < line.length && /[\d.]/.test(line[col])) {
                                 num += line[col];
                                 col++;
                             }
-                            tokens.push(num.includes('.') ? {
-                                type: 'FLOAT',
-                                value: parseFloat(num),
-                                line: ln + 1
-                            } : {
-                                type: 'INTEGER',
-                                value: parseInt(num),
-                                line: ln + 1
-                            });
+                            tokens.push(num.includes('.')
+                                ? { type: 'FLOAT', value: parseFloat(num), line: ln + 1 }
+                                : { type: 'INTEGER', value: parseInt(num), line: ln + 1 }
+                            );
                             continue;
                         }
-                        const multiOps = ['->', '==', '!=', '<=', '>='];
+
+                        const multiOps = ['->', '==', '!=', '<=', '>=', '&&', '||'];
                         let foundOp = false;
                         for (const op of multiOps) {
                             if (line.substring(col, col + op.length) === op) {
-                                tokens.push({
-                                    type: 'OPERATOR',
-                                    value: op,
-                                    line: ln + 1
-                                });
+                                tokens.push({ type: 'OPERATOR', value: op, line: ln + 1 });
                                 col += op.length;
                                 foundOp = true;
                                 break;
                             }
                         }
                         if (foundOp) continue;
-                        if (/[=+\-*\/%<>(){}[\]:,.]/.test(line[col])) {
-                            tokens.push({
-                                type: 'PUNCTUATION',
-                                value: line[col],
-                                line: ln + 1
-                            });
+
+                        if (/[=+\-*\/%<>(){}[\]:,.|]/.test(line[col])) {
+                            tokens.push({ type: 'PUNCTUATION', value: line[col], line: ln + 1 });
                             col++;
                             continue;
                         }
+
                         if (/[a-zA-Z_]/.test(line[col])) {
                             let ident = '';
                             while (col < line.length && /[\w.]/.test(line[col])) {
                                 ident += line[col];
                                 col++;
                             }
-                            const keywords = ['module', 'function', 'end', 'do', 'if', 'else', 'case', 'return', 'true', 'false', 'nil', 'struct', 'behaviour', 'abstract', 'type', 'cond', 'while', 'for', 'and', 'export', 'enum'];
-                            tokens.push(keywords.includes(ident) ? {
-                                type: 'KEYWORD',
-                                value: ident,
-                                line: ln + 1
-                            } : {
-                                type: 'IDENTIFIER',
-                                value: ident,
-                                line: ln + 1
-                            });
+                            const keywords = [
+                                'module', 'function', 'end', 'do', 'if', 'else', 'elseif',
+                                'case', 'return', 'true', 'false', 'nil', 'null',
+                                'and', 'or', 'not', 'while', 'for', 'break', 'continue',
+                                'try', 'catch', 'throw', 'in'
+                            ];
+                            tokens.push(keywords.includes(ident)
+                                ? { type: 'KEYWORD', value: ident, line: ln + 1 }
+                                : { type: 'IDENTIFIER', value: ident, line: ln + 1 }
+                            );
                             continue;
                         }
                         col++;
                     }
-                    tokens.push({
-                        type: 'NEWLINE',
-                        line: ln + 1
-                    });
+                    tokens.push({ type: 'NEWLINE', line: ln + 1 });
                 }
-                tokens.push({
-                    type: 'EOF',
-                    line: lines.length
-                });
+                tokens.push({ type: 'EOF', line: lines.length });
                 return tokens;
             }
+
             parse(tokens) {
                 let pos = 0;
-                const current = () => tokens[pos] || {
-                    type: 'EOF'
-                };
+                const current = () => tokens[pos] || { type: 'EOF' };
                 const advance = () => tokens[pos++];
-                const skipNL = () => {
-                    while (current().type === 'NEWLINE') advance();
-                };
+                const skipNL = () => { while (current().type === 'NEWLINE') advance(); };
+
                 const expect = (type, val) => {
                     skipNL();
                     const t = current();
                     if (t.type !== type || (val !== undefined && t.value !== val)) {
-                        this.errors.push({
-                            line: t.line,
-                            message: `Expected ${val || type}`
-                        });
+                        this.errors.push({ line: t.line, message: `Expected ${val || type}` });
                         return null;
                     }
                     return advance();
                 };
+
                 const parseProgram = () => {
-                    const program = {
-                        type: 'program',
-                        modules: []
-                    };
+                    const program = { type: 'program', modules: [] };
                     while (current().type !== 'EOF') {
                         skipNL();
                         if (current().type === 'EOF') break;
-                        if (current().type === 'KEYWORD' && current().value === 'module') program.modules.push(parseModule());
-                        else advance();
+                        if (current().type === 'KEYWORD' && current().value === 'module') {
+                            program.modules.push(parseModule());
+                        } else advance();
                     }
                     return program;
                 };
+
                 const parseModule = () => {
                     const line = current().line;
                     expect('KEYWORD', 'module');
                     const name = current().value;
                     advance();
                     skipNL();
-                    const mod = {
-                        type: 'module',
-                        name,
-                        functions: [],
-                        line
-                    };
+                    const mod = { type: 'module', name, functions: [], line };
                     while (current().type !== 'EOF' && !(current().type === 'KEYWORD' && current().value === 'end')) {
                         skipNL();
-                        if (current().type === 'KEYWORD' && current().value === 'function') mod.functions.push(parseFunction());
-                        else if (current().type === 'KEYWORD' && current().value === 'end') break;
+                        if (current().type === 'KEYWORD' && current().value === 'function') {
+                            mod.functions.push(parseFunction());
+                        } else if (current().type === 'KEYWORD' && current().value === 'end') break;
                         else advance();
                     }
                     expect('KEYWORD', 'end');
                     return mod;
                 };
+
                 const parseFunction = () => {
                     const line = current().line;
                     expect('KEYWORD', 'function');
@@ -1699,7 +1651,6 @@
                                 advance();
                                 pt = current().value;
                                 advance();
-                                // Handle parameterized types like Array(String)
                                 if (current().value === '(') {
                                     pt += '(';
                                     advance();
@@ -1707,67 +1658,45 @@
                                         pt += current().value;
                                         advance();
                                     }
-                                    if (current().value === ')') {
-                                        pt += ')';
-                                        advance();
-                                    }
+                                    if (current().value === ')') { pt += ')'; advance(); }
                                 }
                             }
-                            params.push({
-                                name: pn,
-                                type: pt
-                            });
+                            params.push({ name: pn, type: pt });
                             if (current().value === ',') advance();
                         } else break;
                     }
                     expect('PUNCTUATION', ')');
                     let returnType = 'Nil';
-                    if (current().value === ':') {
-                        advance();
-                        returnType = current().value;
-                        advance();
-                    }
+                    if (current().value === ':') { advance(); returnType = current().value; advance(); }
                     const body = [];
                     skipNL();
                     while (current().type !== 'EOF' && !(current().type === 'KEYWORD' && current().value === 'end')) {
                         skipNL();
                         if (current().type === 'KEYWORD' && current().value === 'end') break;
-                        const stmt = parseStatement();
-                        if (stmt) body.push(stmt);
+                        const statement = parseStatement();
+                        if (statement) body.push(statement);
                     }
                     expect('KEYWORD', 'end');
-                    return {
-                        type: 'function',
-                        name,
-                        params,
-                        returnType,
-                        body,
-                        line
-                    };
+                    return { type: 'function', name, params, returnType, body, line };
                 };
+
                 const parseStatement = () => {
                     skipNL();
                     const line = current().line;
                     if (current().type === 'KEYWORD' && current().value === 'return') {
                         advance();
-                        return {
-                            type: 'return',
-                            value: parseExpression(),
-                            line
-                        };
+                        return { type: 'return', value: parseExpression(), line };
                     }
                     if (current().type === 'KEYWORD' && current().value === 'if') return parseIf();
+                    if (current().type === 'KEYWORD' && current().value === 'while') return parseWhile();
+                    if (current().type === 'KEYWORD' && current().value === 'break') { advance(); return { type: 'break', line }; }
+                    if (current().type === 'KEYWORD' && current().value === 'continue') { advance(); return { type: 'continue', line }; }
                     if (current().type === 'IDENTIFIER') {
                         const name = current().value;
                         advance();
                         if (current().value === '=') {
                             advance();
-                            return {
-                                type: 'assignment',
-                                variable: name,
-                                value: parseExpression(),
-                                line
-                            };
+                            return { type: 'assignment', variable: name, value: parseExpression(), line };
                         }
                         if (current().value === '(') {
                             advance();
@@ -1777,75 +1706,92 @@
                                 if (current().value === ',') advance();
                             }
                             expect('PUNCTUATION', ')');
-                            if (name === 'IO.puts') return {
-                                type: 'io_puts',
-                                value: args[0],
-                                line
-                            };
-                            return {
-                                type: 'function_call',
-                                name,
-                                args,
-                                line
-                            };
+                            if (name === 'IO.puts') return { type: 'io_puts', value: args[0], line };
+                            if (name === 'Process.send') return { type: 'process_send', value: [args[0], args[1]], line };
+                            if (name === 'Process.sendAfter') return { type: 'process_send_after', value: args, line };
+                            if (name === 'Process.spawn') return { type: 'expression', value: { type: 'process_spawn' }, line };
+                            if (name === 'Process.self') return { type: 'expression', value: { type: 'process_self' }, line };
+                            if (name === 'Process.receive') return { type: 'expression', value: { type: 'process_receive' }, line };
+                            if (name === 'Process.kill') return { type: 'process_kill', value: args[0], line };
+                            return { type: 'function_call', name, args, line };
                         }
-                        return {
-                            type: 'expression',
-                            value: {
-                                type: 'identifier',
-                                name
-                            },
-                            line
-                        };
+                        return { type: 'expression', value: { type: 'identifier', name }, line };
                     }
                     if (current().type !== 'NEWLINE' && current().type !== 'EOF') advance();
                     return null;
                 };
+
                 const parseIf = () => {
                     const line = current().line;
                     expect('KEYWORD', 'if');
                     const condition = parseExpression();
                     skipNL();
                     if (current().type === 'KEYWORD' && current().value === 'do') advance();
-                    const thenBody = [],
-                        elseBody = [];
-                    while (current().type !== 'EOF' && !(current().type === 'KEYWORD' && (current().value === 'else' || current().value === 'end'))) {
+                    const thenBody = [], elseBody = [];
+                    while (current().type !== 'EOF' && !(current().type === 'KEYWORD' && (current().value === 'else' || current().value === 'elseif' || current().value === 'end'))) {
                         skipNL();
-                        if (current().type === 'KEYWORD' && (current().value === 'else' || current().value === 'end')) break;
-                        const stmt = parseStatement();
-                        if (stmt) thenBody.push(stmt);
+                        if (current().type === 'KEYWORD' && (current().value === 'else' || current().value === 'elseif' || current().value === 'end')) break;
+                        const statement = parseStatement();
+                        if (statement) thenBody.push(statement);
                     }
-                    if (current().type === 'KEYWORD' && current().value === 'else') {
+                    if (current().type === 'KEYWORD' && current().value === 'elseif') {
+                        elseBody.push(parseIf());
+                    } else if (current().type === 'KEYWORD' && current().value === 'else') {
                         advance();
                         skipNL();
                         while (current().type !== 'EOF' && !(current().type === 'KEYWORD' && current().value === 'end')) {
                             skipNL();
                             if (current().type === 'KEYWORD' && current().value === 'end') break;
-                            const stmt = parseStatement();
-                            if (stmt) elseBody.push(stmt);
+                            const statement = parseStatement();
+                            if (statement) elseBody.push(statement);
                         }
+                        expect('KEYWORD', 'end');
+                    } else {
+                        expect('KEYWORD', 'end');
+                    }
+                    return { type: 'if', condition, thenBody, elseBody, line };
+                };
+
+                const parseWhile = () => {
+                    const line = current().line;
+                    expect('KEYWORD', 'while');
+                    const condition = parseExpression();
+                    skipNL();
+                    if (current().type === 'KEYWORD' && current().value === 'do') advance();
+                    const body = [];
+                    while (current().type !== 'EOF' && !(current().type === 'KEYWORD' && current().value === 'end')) {
+                        skipNL();
+                        if (current().type === 'KEYWORD' && current().value === 'end') break;
+                        const statement = parseStatement();
+                        if (statement) body.push(statement);
                     }
                     expect('KEYWORD', 'end');
-                    return {
-                        type: 'if',
-                        condition,
-                        thenBody,
-                        elseBody,
-                        line
-                    };
+                    return { type: 'while', condition, body, line };
                 };
-                const parseExpression = () => parseComparison();
+
+                const parseExpression = () => parseOr();
+                const parseOr = () => {
+                    let left = parseAnd();
+                    while ((current().type === 'KEYWORD' && current().value === 'or') || current().value === '||') {
+                        advance();
+                        left = { type: 'binary', op: 'or', left, right: parseAnd() };
+                    }
+                    return left;
+                };
+                const parseAnd = () => {
+                    let left = parseComparison();
+                    while ((current().type === 'KEYWORD' && current().value === 'and') || current().value === '&&') {
+                        advance();
+                        left = { type: 'binary', op: 'and', left, right: parseComparison() };
+                    }
+                    return left;
+                };
                 const parseComparison = () => {
                     let left = parseAdditive();
                     while (['==', '!=', '<', '>', '<=', '>='].includes(current().value)) {
                         const op = current().value;
                         advance();
-                        left = {
-                            type: 'binary',
-                            op,
-                            left,
-                            right: parseAdditive()
-                        };
+                        left = { type: 'binary', op, left, right: parseAdditive() };
                     }
                     return left;
                 };
@@ -1854,73 +1800,58 @@
                     while (['+', '-'].includes(current().value)) {
                         const op = current().value;
                         advance();
-                        left = {
-                            type: 'binary',
-                            op,
-                            left,
-                            right: parseMultiplicative()
-                        };
+                        left = { type: 'binary', op, left, right: parseMultiplicative() };
                     }
                     return left;
                 };
                 const parseMultiplicative = () => {
-                    let left = parsePrimary();
+                    let left = parseUnary();
                     while (['*', '/', '%'].includes(current().value)) {
                         const op = current().value;
                         advance();
-                        left = {
-                            type: 'binary',
-                            op,
-                            left,
-                            right: parsePrimary()
-                        };
+                        left = { type: 'binary', op, left, right: parseUnary() };
                     }
                     return left;
+                };
+                const parseUnary = () => {
+                    if (current().value === '-' || current().value === '!' || (current().type === 'KEYWORD' && current().value === 'not')) {
+                        const op = current().value;
+                        advance();
+                        return { type: 'unary', op, operand: parseUnary() };
+                    }
+                    return parsePostfix();
+                };
+                const parsePostfix = () => {
+                    let expr = parsePrimary();
+                    while (true) {
+                        if (current().value === '(') {
+                            advance();
+                            const args = [];
+                            while (current().value !== ')' && current().type !== 'EOF') {
+                                args.push(parseExpression());
+                                if (current().value === ',') advance();
+                            }
+                            expect('PUNCTUATION', ')');
+                            expr = { type: 'call', name: expr.name || '', args };
+                        } else if (current().value === '[') {
+                            advance();
+                            const index = parseExpression();
+                            expect('PUNCTUATION', ']');
+                            expr = { type: 'index', object: expr, index };
+                        } else break;
+                    }
+                    return expr;
                 };
                 const parsePrimary = () => {
                     skipNL();
                     const tok = current();
-                    if (tok.type === 'INTEGER') {
-                        advance();
-                        return {
-                            type: 'integer',
-                            value: tok.value
-                        };
-                    }
-                    if (tok.type === 'FLOAT') {
-                        advance();
-                        return {
-                            type: 'float',
-                            value: tok.value
-                        };
-                    }
-                    if (tok.type === 'STRING') {
-                        advance();
-                        return {
-                            type: 'string',
-                            value: tok.value
-                        };
-                    }
-                    if (tok.type === 'KEYWORD' && tok.value === 'true') {
-                        advance();
-                        return {
-                            type: 'boolean',
-                            value: true
-                        };
-                    }
-                    if (tok.type === 'KEYWORD' && tok.value === 'false') {
-                        advance();
-                        return {
-                            type: 'boolean',
-                            value: false
-                        };
-                    }
-                    if (tok.type === 'KEYWORD' && tok.value === 'nil') {
-                        advance();
-                        return {
-                            type: 'nil'
-                        };
-                    }
+                    if (tok.type === 'INTEGER') { advance(); return { type: 'integer', value: tok.value }; }
+                    if (tok.type === 'FLOAT') { advance(); return { type: 'float', value: tok.value }; }
+                    if (tok.type === 'STRING') { advance(); return { type: 'string', value: tok.value }; }
+                    if (tok.type === 'SYMBOL') { advance(); return { type: 'symbol', value: tok.value }; }
+                    if (tok.type === 'KEYWORD' && tok.value === 'true') { advance(); return { type: 'boolean', value: true }; }
+                    if (tok.type === 'KEYWORD' && tok.value === 'false') { advance(); return { type: 'boolean', value: false }; }
+                    if (tok.type === 'KEYWORD' && (tok.value === 'nil' || tok.value === 'null')) { advance(); return { type: 'nil' }; }
                     if (tok.type === 'IDENTIFIER') {
                         const name = tok.value;
                         advance();
@@ -1932,36 +1863,53 @@
                                 if (current().value === ',') advance();
                             }
                             expect('PUNCTUATION', ')');
-                            return {
-                                type: 'call',
-                                name,
-                                args
-                            };
+                            if (name === 'Process.spawn') return { type: 'process_spawn' };
+                            if (name === 'Process.self') return { type: 'process_self' };
+                            if (name === 'Process.receive') return { type: 'process_receive' };
+                            if (name === 'Process.kill') return { type: 'process_kill', target: args[0] };
+                            return { type: 'call', name, args };
                         }
-                        return {
-                            type: 'identifier',
-                            name
-                        };
+                        return { type: 'identifier', name };
                     }
-                    if (tok.value === '(') {
+                    if (tok.value === '(') { advance(); const expr = parseExpression(); expect('PUNCTUATION', ')'); return expr; }
+                    if (tok.value === '[') {
                         advance();
-                        const expr = parseExpression();
-                        expect('PUNCTUATION', ')');
-                        return expr;
+                        const elements = [];
+                        while (current().value !== ']' && current().type !== 'EOF') {
+                            elements.push(parseExpression());
+                            if (current().value === ',') advance();
+                        }
+                        expect('PUNCTUATION', ']');
+                        return { type: 'array', elements };
                     }
-                    if (tok.value === '_') {
+                    if (tok.value === '{') {
                         advance();
-                        return {
-                            type: 'wildcard'
-                        };
+                        const entries = [];
+                        while (current().value !== '}' && current().type !== 'EOF') {
+                            const key = parseExpression();
+                            expect('PUNCTUATION', ':');
+                            const value = parseExpression();
+                            entries.push([key, value]);
+                            if (current().value === ',') advance();
+                        }
+                        expect('PUNCTUATION', '}');
+                        return { type: 'map', entries };
                     }
+                    if (tok.value === '_') { advance(); return { type: 'wildcard' }; }
                     advance();
-                    return {
-                        type: 'nil'
-                    };
+                    return { type: 'nil' };
                 };
+
                 return parseProgram();
             }
+        }
+
+        // Export
+        if (typeof module !== 'undefined' && module.exports) {
+            module.exports = { KonjacCompiler };
+        }
+        if (typeof window !== 'undefined') {
+            window.KonjacCompiler = KonjacCompiler;
         }
 
         class KonjacDecompiler {
@@ -1991,7 +1939,7 @@
                     this.output.push("module Decompiled.Application");
 
                     this.indent = 1;
-                    this.output.push(this.line("function main(arguments : Array(String)) : Nil"));
+                    this.output.push(this.line("function main(arguments : Array(String)) : Null"));
                     this.indent = 2;
 
                     for (let i = 0; i < instructions.length; i++) {
@@ -2023,12 +1971,12 @@
             }
 
             formatValue(value) {
-                if (!value) return "nil";
+                if (!value) return "null";
                 if (value.type === "string") return `"${value.value}"`;
                 if (value.type === "integer" || value.type === "float")
                     return String(value.value);
                 if (value.type === "symbol") return `:${value.value}`;
-                return "nil";
+                return "null";
             }
 
             decompileInstruction(instructions, index) {
@@ -2050,14 +1998,14 @@
                         return { nextIndex: index + 1 };
 
                     case "STORE_LOCAL": {
-                        const rhs = this.stack.pop() ?? "nil";
+                        const rhs = this.stack.pop() ?? "null";
                         const name = this.getLocalName(value.value);
                         this.output.push(this.line(`${name} = ${rhs}`));
                         return { nextIndex: index + 1 };
                     }
 
                     case "PRINT_LINE": {
-                        const arg = this.stack.pop() ?? "nil";
+                        const arg = this.stack.pop() ?? "null";
                         this.output.push(this.line(`IO.puts(${arg})`));
                         return { nextIndex: index + 1 };
                     }
@@ -2073,8 +2021,8 @@
                     case "GREATER_THAN":
                     case "LESS_THAN_OR_EQUAL":
                     case "GREATER_THAN_OR_EQUAL": {
-                        const b = this.stack.pop() ?? "nil";
-                        const a = this.stack.pop() ?? "nil";
+                        const b = this.stack.pop() ?? "null";
+                        const a = this.stack.pop() ?? "null";
                         const map = {
                             ADD: "+",
                             SUBTRACT: "-",
@@ -2095,7 +2043,7 @@
                     case "CALL": {
                         const args = [];
                         for (let i = 0; i < value.argc; i++)
-                            args.unshift(this.stack.pop() ?? "nil");
+                            args.unshift(this.stack.pop() ?? "null");
 
                         const callExpr = `${value.name}(${args.join(", ")})`;
                         this.stack.push(callExpr);
@@ -2104,7 +2052,7 @@
 
                     case "RETURN": {
                         const ret = this.stack.pop();
-                        if (ret && ret !== "nil")
+                        if (ret && ret !== "null")
                             this.output.push(this.line(`return ${ret}`));
                         else
                             this.output.push(this.line("return"));
@@ -2336,6 +2284,7 @@
             elements.bpType = document.getElementById('bpType');
             elements.bpValue = document.getElementById('bpValue');
             elements.bpHint = document.getElementById('bpHint');
+            elements.btnClearOutput = document.getElementById('btnClearOutput');
             buildExamplesTree();
             await initializeEditors();
             setupEventListeners();
@@ -2370,28 +2319,30 @@
                     monaco.editor.defineTheme('jellyDark', {
                         base: 'vs-dark',
                         inherit: true,
-                        rules: [{
-                            token: 'keyword',
-                            foreground: '8b5cf6'
-                        }, {
-                            token: 'string',
-                            foreground: '22c55e'
-                        }, {
-                            token: 'number',
-                            foreground: 'f59e0b'
-                        }, {
-                            token: 'comment',
-                            foreground: '6b7280'
-                        }],
+                        rules: [
+                            { token: 'keyword', foreground: '8b5cf6' },
+                            { token: 'string', foreground: '22c55e' },
+                            { token: 'number', foreground: 'f59e0b' },
+                            { token: 'comment', foreground: '6b7280' },
+
+                            { token: 'namespace', foreground: '38bdf8' },
+                            { token: 'type.identifier', foreground: '38bdf8' },
+                            { token: 'function.identifier', foreground: 'f472b6' },
+
+                            { token: 'builtin.module', foreground: '22d3ee' },
+                            { token: 'builtin.function', foreground: '67e8f9' },
+
+                            { token: 'constant.atom', foreground: 'e879f9' }
+                        ],
                         colors: {
                             'editor.background': '#111113',
                             'editor.foreground': '#e4e4e7',
                             'editor.lineHighlightBackground': '#1f1f23'
                         }
                     });
-                    monaco.languages.register({
-                        id: 'konjac'
-                    });
+
+                    monaco.languages.register({ id: 'konjac' });
+
                     monaco.languages.setMonarchTokensProvider('konjac', {
                         defaultToken: '',
                         keywords: ['module', 'function', 'end', 'do', 'if', 'else', 'case', 'return', 'true', 'false', 'nil', 'behaviour', 'abstract'],
@@ -2415,6 +2366,7 @@
                             ]
                         }
                     });
+
                     konjacEditor = monaco.editor.create(document.getElementById('konjacEditor'), {
                         value: '-- Currently only some parts of the language are supported',
                         language: 'konjac',
@@ -2450,6 +2402,12 @@
             elements.btnConnect.addEventListener('click', () => {
                 if (state.isConnected) debuggerClient.disconnect();
                 else debuggerClient.connect();
+            });
+            elements.btnClearOutput = document.getElementById('btnClearOutput');
+
+            elements.btnClearOutput.addEventListener('click', () => {
+                elements.outputTab.innerHTML = '';
+                logOutput('Output cleared', 'compile');
             });
             elements.btnCompile.addEventListener('click', compileKonjac);
             elements.btnDecompile.addEventListener('click', decompileBytecode);

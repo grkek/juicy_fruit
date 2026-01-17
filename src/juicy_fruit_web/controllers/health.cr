@@ -7,14 +7,14 @@ module JuicyFruitWeb
 
       def get(context : Context) : Context
         status = {
-          "status"    => "healthy",
-          "timestamp" => Time.utc.to_rfc3339,
-          "uptime"    => format_duration(Time.utc - start_time),
+          "status"        => "healthy",
+          "timestamp"     => Time.utc.to_rfc3339,
+          "uptime"        => format_duration(Time.utc - start_time),
           "uptimeSeconds" => (Time.utc - start_time).total_seconds.to_i64,
-          "version"   => Constants::VERSION,
-          "environment" => ENV.fetch("CRYSTAL_ENV", "development"),
-          "memory" => {
-            "heapSize" => GC.stats.heap_size,
+          "version"       => Constants::VERSION,
+          "environment"   => ENV.fetch("CRYSTAL_ENV", "development"),
+          "memory"        => {
+            "heapSize"  => GC.stats.heap_size,
             "freeBytes" => GC.stats.free_bytes,
             "usedBytes" => GC.stats.heap_size - GC.stats.free_bytes,
           },

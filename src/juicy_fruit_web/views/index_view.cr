@@ -6,7 +6,7 @@ module JuicyFruitWeb
       def initialize
       end
 
-      ECR.def_to_s "#{__DIR__}/../templates/index.ecr"
+      ECR.def_to_s "#{__DIR__}/../templates/index.html"
     end
   end
 end

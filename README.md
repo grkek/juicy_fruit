@@ -8,6 +8,167 @@ A WIP JavaScript based compiler for the Konjac Programming Language and a WebSoc
 docker compose up
 ```
 
+## Goal
+
+The current goal is to be able to parse, compile and run the code mentioned below.
+
+```lua
+-- An example HTTP server written in Konjac
+module Rum.Request
+  struct [
+    method: String;
+    path: String;
+    headers: Map(String, String);
+  ]
+end
+
+module Rum.Response
+  struct [
+    statusCode: Int64 = 200;
+    headers: Map(String, String) = {};
+    body: Binary = Binary { };
+  ]
+  
+  export function encode(response : Rum.Response) : Binary
+    
+    reasonPhrase : String = case response.statusCode
+      when 200, do: "OK"
+      when 201, do: "Created"
+      when 301, do: "Moved Permanently"
+      when 400, do: "Bad Request"
+      when 404, do: "Not Found"
+      when 500, do: "Internal Server Error"
+      else do: "Unknown"
+    end
+    
+    statusLine : String = "HTTP/1.1 " + Int64.toString(response.statusCode) + " " + reasonPhrase + "\r\n"
+
+    updatedHeaders : Map(String, String) = if Map.hasKey(response.headers, "Content-Length")
+      response.headers
+    else
+      Map.put(response.headers, "Content-Length", String.fromInt(Binary.length(response.body)))
+    end
+    
+    headersString : String = updatedHeaders
+      |> Map.toList()  
+      |> Array.map(function(pair : {String, String}) do
+        pair.key + ": " + pair.value + "\r\n"
+      end)
+      |> String.join()
+      |> String.concatenate("\r\n\r\n")
+      
+    statusLine
+    |> String.concatenate(headersString)
+    |> Binary.fromString()
+    |> Binary.concatenate(response.body)
+  end
+end
+
+module Rum.Context
+  struct [
+    request: Rum.Request;
+    response: Rum.Response;
+  ]
+end
+
+behaviour Rum.Handler
+  abstract function call(handler : Rum.Handler, context : Rum.Context) : Rum.Context
+end
+
+module Rum.Server
+  struct [
+    host: String;
+    port: UInt16;
+    handlers: Array(Rum.Handler);
+  ]
+
+  function handleClient(server : Rum.Server, client : TCP.Client) : Nil
+    data : Binary = TCP.receive(client)
+
+    [headerSection, messageBody] = 
+      data
+      |> Binary.toString()
+      |> String.split("\r\n\r\n")
+
+    [startLine, ...unprocessedHeaders]
+      headerSection
+      |> String.split("\r\n")
+
+    headers =
+      unprocessedHeaders 
+      |> Array.map(function(header : String) do
+        [key, value] = String.split(header)
+        
+        {key: value}
+      end)
+      |> Map.zip()
+      
+    [method, path, "HTTP/1.1"] = startLine |> String.split(" ") |> String.stripSuffix()
+
+    context = 
+      Rum.Context { 
+        request: Rum.Request { 
+          method: method,
+          path: path,
+          headers: headers 
+        }, 
+        response: Rum.Response { }
+      }
+
+    updatedContext = 
+      server.handlers
+      |> Array.reduce(function(handler : Rum.Handler, accumulator : Rum.Context) do 
+        Rum.handler.call(handler, accumulator)
+      end)
+      
+    encodedResponse = Rum.Response.encode(updatedContext.response)
+
+    TCP.send(client, encodedResponse)
+  end
+
+  export function bind(server : Rum.Server) : Rum.Response
+    loop do
+      client : TCP.Client? = TCP.accept(server.host, server.port)
+      
+      if client do
+        Process.spawn do
+          handleClient(server, client)
+        end
+      else
+        Process.killSelf()
+      end
+    end
+  end
+end
+
+module Rum.Application
+  export function main(arguments : Array(String)) : Nil
+    server = Rum.Server { host: "127.0.0.1", port: 8080 as UInt16}
+
+    supervisor = 
+      Supervisor {
+        strategy: "OneForOne",
+        maximumRestarts: 5,
+        restartWindow: 10
+      }
+
+    process = Process.spawn do
+      Rum.Server.bind(server)
+    end
+
+    child = Child {
+      id: "worker",
+      process: process,
+      restart: "Transiet",
+      maxRestarts: 3,
+      restartWindow: 5
+    }
+    
+    Supervisor.addChild(supervisor, child)
+  end
+end
+```
+
 ## HTTP Protocol
 
 Connect to `http://localhost:4004/`
