@@ -52,7 +52,8 @@ module Rum.Response
     headersString : String = updatedHeaders
       |> Map.toList()  
       |> Array.map(function(pair : {String, String}) do
-        pair.key + ": " + pair.value + "\r\n"
+        -- String interpolation with the expansion
+        <<pair.key, ": ", pair.value, "\r\n>>
       end)
       |> String.join()
       |> String.concatenate("\r\n\r\n")
