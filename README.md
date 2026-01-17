@@ -24,9 +24,9 @@ end
 
 module Rum.Response
   struct [
+    body: Binary = Binary { };
     statusCode: Int64 = 200;
     headers: Map(String, String) = {};
-    body: Binary = Binary { };
   ]
   
   export function encode(response : Rum.Response) : Binary
@@ -48,11 +48,12 @@ module Rum.Response
       Map.put(response.headers, "Content-Length", String.fromInt(Binary.length(response.body)))
     end
     
-    headersString : String = updatedHeaders
-      |> Map.toList()  
-      |> Array.map(function(pair : {String, String}) do
+    headersString : String = 
+      updatedHeaders
+      |> Map.toArray()  
+      |> Array.map(function([key, value] : Array(String)) do
         -- String interpolation with the expansion
-        <<pair.key, ": ", pair.value, "\r\n>>
+        <<key, ": ", value, "\r\n>>
       end)
       |> String.join()
       |> String.concatenate("\r\n\r\n")
@@ -75,12 +76,39 @@ module Rum.Context
 
   export function setResponseHeader(context : Rum.Context, key : String, value : String) : Rum.Context
     Rum.Context { 
-      request: context.request,
-      response: Rum.Response {
+      response: Rum.Response { 
         headers: Map.put(context.response.headers, key, value),
         ...context.response
-        }
-      } 
+      }
+      ...context
+    }
+  end
+
+  export function sendResponse(context : Rum.Context, body : Any, statusCode : Int64 = 200) : Rum.Context
+    Rum.Context { 
+      response: {
+        body: body,
+        statusCode: statusCode,
+        ...context.response
+      },
+      ...context
+    }
+  end
+
+  export function json(context : Rum.Context, data : JSON::Any) : Rum.Context
+    body = data |> JSON.encode() |> Binary.fromString()
+
+    context
+    |> Rum.Context.setResponseHeader("Content-Type", "application/json")
+    |> Rum.Context.sendResponse(body)
+  end
+
+  export function html(context : Rum.Context, data : String) : Rum.Context
+    body = data |> Binary.fromString()
+
+    context 
+    |> Rum.Context.setResponseHeader("Content-Type", "text/html")
+    |> Rum.Context.sendResponse(body)
   end
 end
 
@@ -132,7 +160,7 @@ module Rum.Server
     updatedContext = 
       server.handlers
       |> Array.reduce(function(handler : Rum.Handler, accumulator : Rum.Context) do 
-        Rum.handler.call(handler, accumulator)
+        Rum.Handler.call(handler, accumulator)
       end)
       
     encodedResponse = Rum.Response.encode(updatedContext.response)
@@ -155,9 +183,19 @@ module Rum.Server
   end
 end
 
+module Untitled.Handler
+  implement Rum.Handler
+
+  export function call(handler : Rum.Handler, context : Rum.Context) : Rum.Context
+    context
+    |> Rum.Context.setResponseHeader("Server", "Rum/0.1.0")
+    |> Rum.Context.json({"success": true, "message": "Hello, World!", "data": nil})
+  end
+end
+
 module Rum.Application
   export function main(arguments : Array(String)) : Nil
-    server = Rum.Server { host: "127.0.0.1", port: 8080 as UInt16}
+    server = Rum.Server { host: "127.0.0.1", port: 8080 as UInt16, handlers: [Untitled.Handler] }
 
     supervisor = 
       Supervisor {
